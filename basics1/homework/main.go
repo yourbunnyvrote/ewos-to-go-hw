@@ -65,7 +65,7 @@ func drawTemplateWithBorders(str string, c Color) {
 func drawBetweenBorder(between CellBorder, c Color) {
 	colorPrint("|", c)
 
-	for i := 0; i < 38; i++ {
+	for i := 0; i < maxCharCount-1; i++ {
 		colorPrint(string(between), c)
 	}
 	colorPrint("|\n", c)
