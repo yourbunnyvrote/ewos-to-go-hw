@@ -2,109 +2,122 @@ package main
 
 import "fmt"
 
-type Cell func() string
+type drawSubCell func() string
 
-type CellBorder rune
+type ColorCode int
 
 type Color string
 
-func (cb CellBorder) String() string {
-	return fmt.Sprintf("%c", cb)
+type CellBorder rune
+
+type CellShape func(CellBorder, Color, drawSubCell, []drawSubCell)
+
+const (
+	codeReset = ColorCode(iota)
+	codeBlack = ColorCode(iota + 29)
+	codeRed
+	codeGreen
+	codeYellow
+	codeBlue
+	codeMagenta
+	codeCyan
+	codeWhite
+)
+
+func convertCodeToColor(color ColorCode) Color {
+	return Color(fmt.Sprintf("\033[%dm", color))
 }
 
-func createTemplate(emoji, name, value string) Cell {
+func createTemplate(emoji, name, value string) drawSubCell {
 	return func() string {
 		return emoji + " " + name + ": " + value
 	}
 }
 
-func colorPrint(str string, c Color) {
-	colorsCode := map[Color]string{
-		"reset":   "\033[0m",
-		"black":   "\033[30m",
-		"red":     "\033[31m",
-		"green":   "\033[32m",
-		"yellow":  "\033[33m",
-		"blue":    "\033[34m",
-		"magenta": "\033[35m",
-		"cyan":    "\033[36m",
-		"white":   "\033[37m",
-	}
-
-	fmt.Print(colorsCode[c] + str + colorsCode["reset"])
+func printColoredString(str string, c Color) {
+	fmt.Printf("%s%s%s", c, str, convertCodeToColor(codeReset))
 }
 
-const maxCharCount = 39
+const maxLengthRowCell = 40 // cell width
 
 func drawTemplateWithBorders(str string, c Color) {
-	colorPrint("|", c)
+	printColoredString("|", c)
 
 	charCount := 1
 	for _, ch := range str {
 		charCount++
 
 		// move to the next line if str is so long
-		if charCount == maxCharCount {
+		if charCount == maxLengthRowCell-1 {
 			charCount = 1
 
-			colorPrint("|\n", c)
-			colorPrint("|", c)
+			printColoredString("|\n", c)
+			printColoredString("|", c)
 		}
 
 		fmt.Printf("%c", ch)
 	}
 
 	// correct draw right border
-	for charCount < maxCharCount-1 {
+	for charCount < maxLengthRowCell-2 {
 		fmt.Print(" ")
 		charCount++
 	}
-	colorPrint("|\n", c)
+	printColoredString("|\n", c)
 }
 
-func drawBetweenBorder(between CellBorder, c Color) {
-	colorPrint("|", c)
+func drawBetweenBorder(borderBetween CellBorder, c Color) {
+	printColoredString("|", c)
 
-	for i := 0; i < maxCharCount-1; i++ {
-		colorPrint(string(between), c)
+	for i := 0; i < maxLengthRowCell-2; i++ {
+		printColoredString(string(borderBetween), c)
 	}
-	colorPrint("|\n", c)
+	printColoredString("|\n", c)
 }
 
-func drawCell(between CellBorder, c Color, name Cell, templates ...Cell) {
-	colorPrint("----------------------------------------\n", c)
+func drawCell(drawForm CellShape, borderBetween CellBorder, c Color, name drawSubCell, templates ...drawSubCell) {
+	drawForm(borderBetween, c, name, templates)
+}
+
+func drawSquare(borderBetween CellBorder, c Color, name drawSubCell, templates []drawSubCell) {
+	printColoredString("----------------------------------------\n", c)
 
 	drawTemplateWithBorders(name(), c)
 
 	for _, template := range templates {
-		if between != 0 {
-			drawBetweenBorder(between, c)
+		if borderBetween != 0 {
+			drawBetweenBorder(borderBetween, c)
 		}
 
 		drawTemplateWithBorders(template(), c)
 	}
 
-	colorPrint("----------------------------------------\n", c)
+	printColoredString("----------------------------------------\n", c)
 }
 
 func main() {
-	var between CellBorder = '$'
+	var borderBetween CellBorder = '$'
 
-	var color Color = "yellow"
+	color := convertCodeToColor(codeYellow)
 
 	name := createTemplate("💬", "Название", "станок сторона китай качественный гайка")
-	drawCell(between, color, name)
 
-	color = "green"
+	var square CellShape = func(borderBetween CellBorder, c Color, name drawSubCell, templates []drawSubCell) {
+		drawSquare(borderBetween, c, name, templates)
+	}
+
+	drawCell(square, borderBetween, color, name)
+
+	color = convertCodeToColor(codeGreen)
 	description := createTemplate("📖", "Описание", "станок для дерева")
-	drawCell(between, color, name, description)
+	drawCell(square, borderBetween, color, name, description)
 
-	between = '#'
+	borderBetween = '#'
 	price := createTemplate("💵", "Цена", "100")
-	drawCell(between, color, name, description, price)
+	drawCell(square, borderBetween, color, name, description, price)
 
-	between = 0
-	color = "red"
+	borderBetween = 0
+	color = convertCodeToColor(codeRed)
 	location := createTemplate("📍", "Локация, где можно будет забрать товар, который будет получен", "Москва")
-	drawCell(between, color, name, description, price, location)
+	drawCell(square, borderBetween, color, name, description, price, location)
 }
