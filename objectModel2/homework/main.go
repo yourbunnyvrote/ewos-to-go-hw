@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
 	"math"
@@ -13,31 +14,22 @@ import (
 	"time"
 )
 
-type PreResult struct {
-	Company              string
-	CountValidOperations int
-	Balance              int
-	InvalidOperations    []OperationsWithDate
+type OperationType string
+
+type OperationValue string
+
+type OperationID struct {
+	Value interface{}
 }
 
-type Result struct {
-	Company              string        `json:"company"`
-	CountValidOperations int           `json:"valid_operations_count"`
-	Balance              int           `json:"balance"`
-	InvalidOperations    []interface{} `json:"invalid_operations,omitempty"`
-}
+type OperationCreatedAt string
 
-type OperationsWithDate struct {
-	ID        interface{}
-	CreatedAt OperationCreatedAt
-}
-
-type Operation struct {
-	Type      OperationType      `json:"type,omitempty"`
-	Value     OperationValue     `json:"value,omitempty"`
-	ID        OperationID        `json:"id,omitempty"`
-	CreatedAt OperationCreatedAt `json:"created_at,omitempty"`
-}
+const (
+	Income  OperationType = "income"
+	Outcome OperationType = "outcome"
+	Plus    OperationType = "+"
+	Minus   OperationType = "-"
+)
 
 type FinancialRecord struct {
 	Company   string             `json:"company,omitempty"`
@@ -48,44 +40,40 @@ type FinancialRecord struct {
 	CreatedAt OperationCreatedAt `json:"created_at,omitempty"`
 }
 
-type OperationType string
-
-type OperationValue string
-
-type OperationID struct {
-	ID interface{}
+type Operation struct {
+	Type      OperationType      `json:"type,omitempty"`
+	Value     OperationValue     `json:"value,omitempty"`
+	ID        OperationID        `json:"id,omitempty"`
+	CreatedAt OperationCreatedAt `json:"created_at,omitempty"`
 }
 
-type OperationCreatedAt string
+type OperationResult struct {
+	CountValidOperations int
+	Balance              int
+	InvalidOperations    []DateWithID
+}
 
-const (
-	Plus  OperationType = "+"
-	Minus OperationType = "-"
-)
+type DateWithID struct {
+	ID        interface{}
+	CreatedAt OperationCreatedAt
+}
 
-func (oca *OperationCreatedAt) UnmarshalJSON(data []byte) error {
-	var value string
-	_ = json.Unmarshal(data, &value)
-
-	t, err := time.Parse(time.RFC3339, value)
-	if err != nil {
-		*oca = ""
-		return nil
-	} else {
-		*oca = OperationCreatedAt(t.Format(time.RFC3339))
-	}
-	return nil
+type ResultJSON struct {
+	Company              string        `json:"company"`
+	CountValidOperations int           `json:"valid_operations_count"`
+	Balance              int           `json:"balance"`
+	InvalidOperationsID  []interface{} `json:"invalid_operations,omitempty"`
 }
 
 func (ot *OperationType) UnmarshalJSON(data []byte) error {
 	var value string
 	_ = json.Unmarshal(data, &value)
 
-	switch value {
-	case "income", "+":
+	switch OperationType(value) {
+	case Income, Plus:
 		*ot = Plus
 		break
-	case "outcome", "-":
+	case Outcome, Minus:
 		*ot = Minus
 		break
 	}
@@ -95,10 +83,23 @@ func (ot *OperationType) UnmarshalJSON(data []byte) error {
 func (ov *OperationValue) UnmarshalJSON(data []byte) error {
 	var rawID json.RawMessage
 	if err := json.Unmarshal(data, &rawID); err != nil {
-		*ov = ""
 		return nil
 	}
 
+	// Attempted unmarshal into a number
+	if err := ov.unmarshalNumeric(rawID); err == nil {
+		return nil
+	}
+
+	// Attempted unmarshal into a string
+	if err := ov.unmarshalString(rawID); err == nil {
+		return nil
+	}
+
+	return nil
+}
+
+func (ov *OperationValue) unmarshalNumeric(rawID json.RawMessage) error {
 	var numericValue int
 	if err := json.Unmarshal(rawID, &numericValue); err == nil {
 		*ov = OperationValue(strconv.Itoa(numericValue))
@@ -107,6 +108,7 @@ func (ov *OperationValue) UnmarshalJSON(data []byte) error {
 
 	var floatValue float64
 	if err := json.Unmarshal(rawID, &floatValue); err == nil {
+		// Check if the number is an integer
 		if math.Mod(floatValue, 1) != 0 {
 			*ov = ""
 		} else {
@@ -115,111 +117,172 @@ func (ov *OperationValue) UnmarshalJSON(data []byte) error {
 		return nil
 	}
 
-	var stringID string
-	if err := json.Unmarshal(rawID, &stringID); err == nil {
-		if numericValue, err = strconv.Atoi(stringID); err == nil {
-			*ov = OperationValue(strconv.Itoa(numericValue))
-			return nil
-		}
-		floatValue, err = strconv.ParseFloat(stringID, 64)
-		if err != nil {
-			*ov = ""
-			return nil
-		}
-		if math.Mod(floatValue, 1) != 0 {
-			*ov = ""
-		} else {
-			*ov = OperationValue(strconv.Itoa(int(floatValue)))
-		}
+	return errors.New("ID type is not int or float")
+}
+
+func (ov *OperationValue) unmarshalString(rawID json.RawMessage) error {
+	var stringValue string
+	if err := json.Unmarshal(rawID, &stringValue); err != nil {
+		return errors.New("invalid string value format")
+	}
+
+	// Check value type is int
+	if intValue, err := strconv.Atoi(stringValue); err == nil {
+		*ov = OperationValue(strconv.Itoa(intValue))
 		return nil
 	}
+
+	// Check value type is float
+	floatValue, err := strconv.ParseFloat(stringValue, 64)
+	if err != nil {
+		return nil
+	}
+
+	// Check if the number is an integer
+	if math.Mod(floatValue, 1) != 0 {
+		*ov = ""
+	} else {
+		*ov = OperationValue(strconv.Itoa(int(floatValue)))
+	}
+
 	return nil
 }
 
 func (oid *OperationID) UnmarshalJSON(data []byte) error {
 	var rawID json.RawMessage
 	if err := json.Unmarshal(data, &rawID); err != nil {
-		oid.ID = ""
 		return nil
 	}
 
-	var numericID int
-	if err := json.Unmarshal(rawID, &numericID); err == nil {
-		oid.ID = numericID
+	// Attempted unmarshal into a number
+	var intID int
+	if err := json.Unmarshal(rawID, &intID); err == nil {
+		oid.Value = intID
 		return nil
 	}
 
+	// Attempted unmarshal into a string
 	var stringID string
 	if err := json.Unmarshal(rawID, &stringID); err == nil {
-		oid.ID = stringID
+		oid.Value = stringID
 		return nil
 	}
 
-	oid.ID = ""
+	return nil
+}
+
+func (oca *OperationCreatedAt) UnmarshalJSON(data []byte) error {
+	var value string
+	_ = json.Unmarshal(data, &value)
+
+	t, err := time.Parse(time.RFC3339, value)
+	if err != nil {
+		*oca = ""
+		return nil
+	}
+
+	*oca = OperationCreatedAt(t.Format(time.RFC3339))
+
 	return nil
 }
 
 func processFile(filePath string) {
-	jsonData, err := os.ReadFile(filePath)
-	var records []FinancialRecord
-	err = json.Unmarshal([]byte(jsonData), &records)
-
-	for i := 0; i < len(records); i++ {
-		if records[i].Operation != nil {
-			if records[i].Type == "" {
-				records[i].Type = records[i].Operation.Type
-			}
-
-			if records[i].Value == "" {
-				records[i].Value = records[i].Operation.Value
-			}
-
-			if records[i].CreatedAt == "" {
-				records[i].CreatedAt = records[i].Operation.CreatedAt
-			}
-
-			if records[i].ID.ID == nil {
-				records[i].ID.ID = records[i].Operation.ID.ID
-			}
-		}
+	records, err := readDataFromFile(filePath)
+	if err != nil {
+		fmt.Println("Error while reading data from a file: ", err)
+		return
 	}
 
-	validOperations := make(map[string]PreResult)
+	for i := 0; i < len(records); i++ {
+		copyOperationToFinancialRecord(&records[i])
+	}
+
+	operationsByCompany := processOperations(records)
+	sortInvalidOperations(operationsByCompany)
+	result := createResultJSON(operationsByCompany)
+
+	err = writeResultToFile(result, "out.json")
+	if err != nil {
+		fmt.Println("Error when writing to a file: ", err)
+		return
+	}
+
+	fmt.Println("The data was successfully written to the file out.json")
+}
+
+func readDataFromFile(filePath string) ([]FinancialRecord, error) {
+	jsonData, err := os.ReadFile(filePath)
+	if err != nil {
+		return nil, err
+	}
+
+	var records []FinancialRecord
+	err = json.Unmarshal(jsonData, &records)
+	return records, err
+}
+
+func copyOperationToFinancialRecord(record *FinancialRecord) {
+	if record.Operation != nil {
+		if record.Type == "" {
+			record.Type = record.Operation.Type
+		}
+
+		if record.Value == "" {
+			record.Value = record.Operation.Value
+		}
+
+		if record.CreatedAt == "" {
+			record.CreatedAt = record.Operation.CreatedAt
+		}
+
+		if record.ID.Value == nil {
+			record.ID.Value = record.Operation.ID.Value
+		}
+	}
+}
+
+func processOperations(records []FinancialRecord) map[string]OperationResult {
+	operationsByCompany := make(map[string]OperationResult)
 
 	for _, record := range records {
-		if record.ID.ID != nil && record.Company != "" && record.CreatedAt != "" {
-			existingResult := validOperations[record.Company]
-			existingResult.Company = record.Company
+		if record.ID.Value != nil && record.Company != "" && record.CreatedAt != "" {
+			existingResult := operationsByCompany[record.Company]
 
 			if record.Type == "" || record.Value == "" {
-				existingResult.InvalidOperations = append(existingResult.InvalidOperations, OperationsWithDate{record.ID.ID, record.CreatedAt})
+				existingResult.InvalidOperations = append(existingResult.InvalidOperations, DateWithID{record.ID.Value, record.CreatedAt})
 			} else {
 				existingResult.CountValidOperations += 1
 
 				existingResult.Balance += addBalance(record.Type, record.Value)
 			}
-			validOperations[record.Company] = existingResult
+			operationsByCompany[record.Company] = existingResult
 		}
 	}
 
-	for _, key := range validOperations {
-		sort.Slice(validOperations[key.Company].InvalidOperations, func(i, j int) bool {
-			tmp1, _ := time.Parse(time.RFC3339, string(validOperations[key.Company].InvalidOperations[i].CreatedAt))
-			tmp2, _ := time.Parse(time.RFC3339, string(validOperations[key.Company].InvalidOperations[j].CreatedAt))
+	return operationsByCompany
+}
+
+func sortInvalidOperations(operationsByCompany map[string]OperationResult) {
+	for key := range operationsByCompany {
+		sort.Slice(operationsByCompany[key].InvalidOperations, func(i, j int) bool {
+			tmp1, _ := time.Parse(time.RFC3339, string(operationsByCompany[key].InvalidOperations[i].CreatedAt))
+			tmp2, _ := time.Parse(time.RFC3339, string(operationsByCompany[key].InvalidOperations[j].CreatedAt))
 
 			return tmp1.Before(tmp2)
 		})
 	}
+}
 
-	result := make([]Result, 0, len(validOperations))
-	for _, val := range validOperations {
-		var tmp Result
-		tmp.Company = val.Company
-		tmp.CountValidOperations = val.CountValidOperations
-		tmp.Balance = val.Balance
-		tmp.InvalidOperations = make([]interface{}, len(val.InvalidOperations))
-		for i, value := range val.InvalidOperations {
-			tmp.InvalidOperations[i] = value.ID
+func createResultJSON(operationsByCompany map[string]OperationResult) []ResultJSON {
+	result := make([]ResultJSON, 0, len(operationsByCompany))
+	for key := range operationsByCompany {
+		var tmp ResultJSON
+		tmp.Company = key
+		tmp.CountValidOperations = operationsByCompany[key].CountValidOperations
+		tmp.Balance = operationsByCompany[key].Balance
+		tmp.InvalidOperationsID = make([]interface{}, len(operationsByCompany[key].InvalidOperations))
+		for i, value := range operationsByCompany[key].InvalidOperations {
+			tmp.InvalidOperationsID[i] = value.ID
 		}
 		result = append(result, tmp)
 	}
@@ -228,10 +291,13 @@ func processFile(filePath string) {
 		return result[i].Company < result[j].Company
 	})
 
-	newFile, err := os.Create("out.json")
+	return result
+}
+
+func writeResultToFile(result []ResultJSON, fileName string) error {
+	newFile, err := os.Create(fileName)
 	if err != nil {
-		fmt.Println("Ошибка при открытии файла:", err)
-		return
+		return err
 	}
 	defer newFile.Close()
 
@@ -239,12 +305,7 @@ func processFile(filePath string) {
 	encoder.SetIndent("", "\t")
 
 	err = encoder.Encode(result)
-	if err != nil {
-		fmt.Println("Ошибка при сериализации и записи в файл:", err)
-		return
-	}
-
-	fmt.Println("Данные успешно записаны в файл output.json")
+	return err
 }
 
 func addBalance(operationType OperationType, value OperationValue) int {
@@ -256,45 +317,57 @@ func addBalance(operationType OperationType, value OperationValue) int {
 	return sign * result
 }
 
-func main() {
-	fileName := *flag.String("file", "", "--file 'filename'")
-	flag.Parse()
-
-	fmt.Println(fileName)
-
+func processFileByName(fileName string) error {
 	file, err := os.Open(fileName)
 	if err == nil {
 		processFile(fileName)
 		defer file.Close()
-		return
 	}
+	return err
+}
 
+func processCommandLineFlag() error {
+	fileName := flag.String("file", "", "--file 'filename'")
+	flag.Parse()
+
+	return processFileByName(*fileName)
+}
+
+func processEnvironmentVariable() error {
 	envVarValue := os.Getenv("FILE")
 	if envVarValue != "" {
-		fileName = filepath.Base(envVarValue)
-		file, err = os.Open(fileName)
-		if err == nil {
-			processFile(fileName)
-			defer file.Close()
-			return
-		}
+		fileName := filepath.Base(envVarValue)
+		return processFileByName(fileName)
 	}
+	return errors.New("environment variable FILE is empty")
+}
 
+func processStdin() error {
 	scanner := bufio.NewScanner(os.Stdin)
-	fmt.Print("Введите путь к файлу: ")
+	fmt.Print("Enter the path to the file:")
 	scanner.Scan()
 	inputPath := scanner.Text()
 
 	if inputPath != "" {
-		fileName = filepath.Base(inputPath)
-		file, err = os.Open(fileName)
-		if err == nil {
-			processFile(fileName)
-			defer file.Close()
-			return
-		}
+		fileName := filepath.Base(inputPath)
+		return processFileByName(fileName)
 	}
-	fmt.Println(err)
+	return errors.New("file not found")
+}
 
-	return
+func main() {
+	if err := processCommandLineFlag(); err == nil {
+		return
+	}
+
+	if err := processEnvironmentVariable(); err == nil {
+		return
+	}
+
+	err := processStdin()
+	if err == nil {
+		return
+	}
+
+	fmt.Println(err)
 }
