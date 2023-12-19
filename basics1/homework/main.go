@@ -30,7 +30,7 @@ func convertCodeToColor(color ColorCode) Color {
 
 func createTemplate(emoji, name, value string) drawSubCell {
 	return func() string {
-		return emoji + " " + name + ": " + value
+		return fmt.Sprintf("%s %s: %s", emoji, name, value)
 	}
 }
 
@@ -40,11 +40,11 @@ func printColoredString(str string, c Color) {
 
 const maxLengthRowCell = 40 // cell width
 
-func drawTemplateWithBorders(str string, c Color) {
+func drawTemplateWithBorders(subCell string, c Color) {
 	printColoredString("|", c)
 
 	charCount := 1
-	for _, ch := range str {
+	for _, ch := range subCell {
 		charCount++
 
 		// move to the next line if str is so long
@@ -75,8 +75,8 @@ func drawBetweenBorder(borderBetween CellBorder, c Color) {
 	printColoredString("|\n", c)
 }
 
-func drawCell(drawForm CellShape, borderBetween CellBorder, c Color, name drawSubCell, templates ...drawSubCell) {
-	drawForm(borderBetween, c, name, templates)
+func drawCell(drawForm CellShape, borderBetween CellBorder, c Color, titleCell drawSubCell, templates ...drawSubCell) {
+	drawForm(borderBetween, c, titleCell, templates)
 }
 
 func drawSquare(borderBetween CellBorder, c Color, name drawSubCell, templates []drawSubCell) {
