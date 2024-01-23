@@ -2,111 +2,139 @@ package main
 
 import (
 	"context"
+	"encoding/csv"
 	"fmt"
 	"hw-async/domain"
 	"hw-async/generator"
 	"os"
 	"os/signal"
+	"strconv"
 	"syscall"
 	"time"
 
 	log "github.com/sirupsen/logrus"
 )
 
-var tickers = []string{"SBER", "AAPL"}
-
-type TickerByTime struct {
-	Ticker string
-	TS     time.Time
-}
-
-func generate1mCandle(ctx context.Context, input <-chan domain.Price) <-chan domain.Candle {
+func convertPriceToCandle(input <-chan domain.Price) <-chan domain.Candle {
 	output := make(chan domain.Candle)
 
 	go func() {
 		defer close(output)
-		candlesByTime := make(map[string]domain.Candle)
-		for {
-			select {
-			case <-ctx.Done():
-				for candle := range candlesByTime {
-					output <- candlesByTime[candle]
-				}
-				return
-			case price := <-input:
-				fmt.Printf("prices: %+v\n", price)
-				myTime, _ := domain.PeriodTS(domain.CandlePeriod1m, price.TS)
-				ticker := price.Ticker
-				candle1m := domain.Candle{
-					Ticker: price.Ticker,
-					Period: domain.CandlePeriod1m,
-					Open:   price.Value,
-					High:   price.Value,
-					Low:    price.Value,
-					Close:  price.Value,
-					TS:     myTime,
-				}
 
-				if candle, found := candlesByTime[ticker]; found {
-					if candle.TS == myTime {
-						candle1m.Open = candle.Open
-						candle1m.TS = candle.TS
-						if candle1m.High < candle.High {
-							candle1m.High = candle.High
-						}
-						if candle1m.Low > candle.Low {
-							candle1m.Low = candle.Low
-						}
-					} else {
-						output <- candle
-					}
-				}
-				candlesByTime[ticker] = candle1m
+		for price := range input {
+			candle := domain.Candle{
+				Ticker: price.Ticker,
+				Period: "",
+				Open:   price.Value,
+				High:   price.Value,
+				Low:    price.Value,
+				Close:  price.Value,
+				TS:     price.TS,
 			}
+			output <- candle
 		}
 	}()
 
 	return output
 }
 
-func generate2mCandle(ctx context.Context, input <-chan domain.Candle) <-chan domain.Candle {
+func createLogFile(period domain.CandlePeriod) (*os.File, *csv.Writer, error) {
+	filename := fmt.Sprintf("candles_%s_log.csv", period)
+	file, err := os.Create(filename)
+
+	if err != nil {
+		return nil, nil, err
+	}
+
+	writer := csv.NewWriter(file)
+
+	return file, writer, nil
+}
+
+func writeCandleToFile(candle domain.Candle, writer *csv.Writer, period domain.CandlePeriod) {
+	row := []string{
+		candle.Ticker,
+		candle.TS.Format("2006-01-02T15:04:05-07:00"),
+		strconv.FormatFloat(candle.Open, 'f', 6, 64),
+		strconv.FormatFloat(candle.High, 'f', 6, 64),
+		strconv.FormatFloat(candle.Low, 'f', 6, 64),
+		strconv.FormatFloat(candle.Close, 'f', 6, 64),
+	}
+
+	if err := writer.Write(row); err != nil {
+		log.Printf("Ошибка записи свечи в файл: %v\n", err)
+		return
+	}
+
+	log.Printf("candle%s: %+v\n", period, candle)
+}
+
+func processCandles(input <-chan domain.Candle, period domain.CandlePeriod, writer *csv.Writer, output chan<- domain.Candle) {
+	defer close(output)
+
+	candlesByTicker := make(map[string]domain.Candle)
+
+	for candleLowTime := range input {
+		myTime, err := domain.PeriodTS(period, candleLowTime.TS)
+		if err != nil {
+			fmt.Println(err)
+			break
+		}
+
+		ticker := candleLowTime.Ticker
+		candleHighTime := candleLowTime
+		candleHighTime.Period = period
+		candleHighTime.TS = myTime
+
+		candle, found := candlesByTicker[ticker]
+		if !found {
+			candlesByTicker[ticker] = candleHighTime
+			continue
+		}
+
+		if candle.TS != myTime {
+			output <- candle
+			writeCandleToFile(candle, writer, period)
+
+			candlesByTicker[ticker] = candleHighTime
+
+			continue
+		}
+
+		candleHighTime.Open = candle.Open
+		if candleHighTime.High < candle.High {
+			candleHighTime.High = candle.High
+		}
+
+		if candleHighTime.Low > candle.Low {
+			candleHighTime.Low = candle.Low
+		}
+
+		candlesByTicker[ticker] = candleHighTime
+	}
+
+	for _, candle := range candlesByTicker {
+		output <- candle
+		writeCandleToFile(candle, writer, period)
+	}
+}
+
+func generateCandle(input <-chan domain.Candle, period domain.CandlePeriod) <-chan domain.Candle {
 	output := make(chan domain.Candle)
 
+	file, writer, err := createLogFile(period)
+	if err != nil {
+		fmt.Println("Ошибка при открытии файла:", err)
+		close(output)
+
+		return output
+	}
+
 	go func() {
-		defer close(output)
-		candlesByTime := make(map[string]domain.Candle)
+		defer file.Close()
+		defer writer.Flush()
 
-		for {
-			select {
-			case <-ctx.Done():
-				for candle := range candlesByTime {
-					output <- candlesByTime[candle]
-				}
-				return
-			case candle1m := <-input:
-				fmt.Printf("candle1m: %+v\n", candle1m)
-				myTime, _ := domain.PeriodTS(domain.CandlePeriod2m, candle1m.TS)
-				ticker := candle1m.Ticker
-				candle2m := candle1m
-				candle2m.Period = domain.CandlePeriod2m
-				candle2m.TS = myTime
-
-				if candle, found := candlesByTime[ticker]; found {
-					if candle.TS == myTime {
-						candle2m.Open = candle.Open
-						if candle2m.High < candle.High {
-							candle2m.High = candle.High
-						}
-						if candle2m.Low > candle.Low {
-							candle2m.Low = candle.Low
-						}
-					} else {
-						output <- candle
-					}
-				}
-				candlesByTime[ticker] = candle2m
-			}
-		}
+		processCandles(input, period, writer, output)
 	}()
 
 	return output
@@ -116,41 +144,38 @@ func main() {
 	logger := log.New()
 	ctx, cancel := context.WithCancel(context.Background())
 
+	var tickers = []string{"SBER", "AAPL", "TSLA", "NVDA"}
+
+	const delayMultiplier = 10
+
+	factor := 40.0
+	delay := delayMultiplier * time.Millisecond
+
 	pg := generator.NewPricesGenerator(generator.Config{
-		Factor:  10,
-		Delay:   time.Millisecond * 500,
+		Factor:  factor,
+		Delay:   delay,
 		Tickers: tickers,
 	})
 
 	logger.Info("start prices generator...")
+
 	prices := pg.Prices(ctx)
-	candleses1m := generate1mCandle(ctx, prices)
-	candleses2m := generate2mCandle(ctx, candleses1m)
+	candleses := convertPriceToCandle(prices)
+	candleses1m := generateCandle(candleses, domain.CandlePeriod1m)
+	candleses2m := generateCandle(candleses1m, domain.CandlePeriod2m)
+	candleses10m := generateCandle(candleses2m, domain.CandlePeriod10m)
 
 	sigCh := make(chan os.Signal, 1)
 	signal.Notify(sigCh, syscall.SIGINT)
+
 	go func() {
 		<-sigCh
 		cancel()
 	}()
 
 	for {
-		select {
-		case <-ctx.Done():
-			{
-				for candle := range candleses1m {
-					fmt.Printf("candle1m: %+v\n", candle)
-				}
-				for candle := range candleses2m {
-					fmt.Printf("candle2m: %+v\n", candle)
-				}
-				return
-			}
-		case c2m := <-candleses2m:
-			{
-				fmt.Printf("candle2m: %+v\n", c2m)
-			}
+		if _, ok := <-candleses10m; !ok {
+			break
 		}
 	}
-
 }
