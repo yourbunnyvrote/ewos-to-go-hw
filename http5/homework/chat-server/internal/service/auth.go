@@ -16,3 +16,12 @@ func NewAuthService(repos repository.Authorization) *AuthService {
 func (as *AuthService) CreateUser(user chatutil.User) (string, error) {
 	return as.repos.CreateUser(user)
 }
+
+func (as *AuthService) GetUser(username, password string) (string, error) {
+	user, err := as.repos.GetUser(username, password)
+	if err != nil {
+		return "", err
+	}
+
+	return user.Username, nil
+}

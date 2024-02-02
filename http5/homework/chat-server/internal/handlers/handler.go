@@ -16,8 +16,23 @@ func NewHandler(service *service.Service) *Handler {
 func (h *Handler) InitRoutes() *chi.Mux {
 	r := chi.NewRouter()
 
-	r.Post("/users/register", h.Registration)
-	r.Post("/users/auth", h.Authentication)
+	r.Post("/register", h.Registration)
+	r.Post("/auth", h.Authentication)
+
+	r.Group(func(r chi.Router) {
+		r.Use(h.userIdentity)
+		r.Use(h.isUserExists)
+		r.Post("/messages", h.SendPublicMessage)
+		r.Get("/messages", h.GetPublicMessage)
+	})
+
+	r.Group(func(r chi.Router) {
+		r.Use(h.userIdentity)
+		r.Use(h.isUserExists)
+		r.Post("/messages", h.SendPrivateMessage)
+		r.Get("/messages", h.GetMessages)
+		r.Get("/messages", h.GetPublicMessage)
+	})
 
 	return r
 }

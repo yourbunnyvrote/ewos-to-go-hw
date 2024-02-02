@@ -9,34 +9,31 @@ import (
 	"time"
 )
 
-// User представляет пользователя чата
 type User struct {
 	Username string `json:"username"`
 	Password string `json:"password"`
 }
 
-// Message представляет сообщение в чате
 type Message struct {
 	Username string `json:"username"`
-	Text     string `json:"text"`
+	Content  string `json:"content"`
 }
 
-// ChatServer представляет веб-сервер чата
 type ChatServer struct {
 	httpServer   *http.Server
-	Users        map[string]string    // Хранение пользователей (username: password)
-	UserMutex    sync.Mutex           // Мьютекс для безопасного доступа к Users
-	ChatMessages []Message            // Хранение сообщений чата
-	MessageMutex sync.Mutex           // Мьютекс для безопасного доступа к ChatMessages
-	UserMessages map[string][]Message // Хранение личных сообщений (username: messages)
-	UserMsgMutex sync.Mutex           // Мьютекс для безопасного доступа к UserMessages
+	Users        map[string]string
+	UserMutex    sync.Mutex
+	ChatMessages []Message
+	MessageMutex sync.Mutex
+	UserMessages map[string][]Message
+	UserMsgMutex sync.Mutex
 }
 
 func (cs *ChatServer) Run(port string, handler http.Handler) error {
 	cs.httpServer = &http.Server{
 		Addr:           ":" + port,
 		Handler:        handler,
-		MaxHeaderBytes: 1 << 20, // 1 MB
+		MaxHeaderBytes: 1 << 20,
 		ReadTimeout:    10 * time.Second,
 		WriteTimeout:   10 * time.Second,
 	}
@@ -48,7 +45,6 @@ func (cs *ChatServer) Shutdown(ctx context.Context) error {
 	return cs.httpServer.Shutdown(ctx)
 }
 
-// RegisterUser представляет регистрацию нового пользователя
 func (cs *ChatServer) RegisterUser(w http.ResponseWriter, r *http.Request) {
 	var newUser User
 	err := json.NewDecoder(r.Body).Decode(&newUser)
@@ -60,19 +56,16 @@ func (cs *ChatServer) RegisterUser(w http.ResponseWriter, r *http.Request) {
 	cs.UserMutex.Lock()
 	defer cs.UserMutex.Unlock()
 
-	// Проверка, что пользователь с таким именем не существует
 	if _, exists := cs.Users[newUser.Username]; exists {
 		http.Error(w, "Username already exists", http.StatusConflict)
 		return
 	}
 
-	// Добавление нового пользователя
 	cs.Users[newUser.Username] = newUser.Password
 	w.WriteHeader(http.StatusCreated)
 	fmt.Fprintf(w, "User %s registered successfully", newUser.Username)
 }
 
-// SendMessage представляет отправку сообщения в общий чат
 func (cs *ChatServer) SendMessage(w http.ResponseWriter, r *http.Request) {
 	var newMessage Message
 	err := json.NewDecoder(r.Body).Decode(&newMessage)
