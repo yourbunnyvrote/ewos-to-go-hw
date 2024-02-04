@@ -55,7 +55,7 @@
                 }
             }
         },
-        "/message/private": {
+        "/messages/private": {
             "get": {
                 "security": [
                     {
@@ -182,7 +182,7 @@
                 }
             }
         },
-        "/message/public": {
+        "/messages/public": {
             "get": {
                 "security": [
                     {
@@ -421,6 +421,11 @@
                     "type": "string"
                 }
             }
+        }
+    },
+    "securityDefinitions": {
+        "BasicAuth": {
+            "type": "basic"
         }
     }
 }

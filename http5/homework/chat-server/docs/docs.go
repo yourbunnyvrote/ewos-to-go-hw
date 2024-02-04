@@ -61,7 +61,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/message/private": {
+        "/messages/private": {
             "get": {
                 "security": [
                     {
@@ -188,7 +188,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/message/public": {
+        "/messages/public": {
             "get": {
                 "security": [
                     {
@@ -427,6 +427,11 @@ const docTemplate = `{
                     "type": "string"
                 }
             }
+        }
+    },
+    "securityDefinitions": {
+        "BasicAuth": {
+            "type": "basic"
         }
     }
 }`

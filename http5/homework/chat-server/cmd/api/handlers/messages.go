@@ -18,7 +18,7 @@ import (
 // @Failure 401 {string} string "Unauthorized: Missing or invalid API key"
 // @Failure 500 {string} string "Bad Request: Send public message error"
 // @Failure 500 {string} string "JSON encoding error"
-// @Router /message/public [post]
+// @Router /messages/public [post]
 func (h *Handler) SendPublicMessage(w http.ResponseWriter, r *http.Request) {
 	var textMessage chatutil.TextMessage
 	err := decodeRequestBody(r, &textMessage)
@@ -59,7 +59,7 @@ func (h *Handler) SendPublicMessage(w http.ResponseWriter, r *http.Request) {
 // @Failure 401 {string} string "Unauthorized: Missing or invalid API key"
 // @Failure 500 {string} string "Bad Request: Send private message error"
 // @Failure 500 {string} string "JSON encoding error"
-// @Router /message/private [post]
+// @Router /messages/private [post]
 func (h *Handler) SendPrivateMessage(w http.ResponseWriter, r *http.Request) {
 	var textMessage chatutil.TextMessage
 	err := decodeRequestBody(r, &textMessage)
@@ -105,7 +105,7 @@ func (h *Handler) SendPrivateMessage(w http.ResponseWriter, r *http.Request) {
 // @Failure 400 {string} string "Bad Request: Invalid page number"
 // @Failure 401 {string} string "Unauthorized: Missing or invalid API key"
 // @Failure 500 {string} string "Bad Request: Get public messages error"
-// @Router /message/public [get]
+// @Router /messages/public [get]
 func (h *Handler) GetPublicMessage(w http.ResponseWriter, r *http.Request) {
 	page, err := getPageParams(r)
 	if err != nil || page <= 0 {
@@ -137,7 +137,7 @@ func (h *Handler) GetPublicMessage(w http.ResponseWriter, r *http.Request) {
 // @Failure 400 {string} string "Bad Request: Invalid page number or missing receiver"
 // @Failure 401 {string} string "Unauthorized: Missing or invalid API key"
 // @Failure 500 {string} string "Bad Request: Get private messages error"
-// @Router /message/private [get]
+// @Router /messages/private [get]
 func (h *Handler) GetPrivateMessages(w http.ResponseWriter, r *http.Request) {
 	page, err := getPageParams(r)
 	if err != nil || page <= 0 {

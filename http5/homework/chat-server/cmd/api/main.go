@@ -14,6 +14,10 @@ import (
 
 // @host localhost:8080
 // @BasePath  /
+
+// @securityDefinitions.basic BasicAuth
+// @in header
+// @name Authorization
 func main() {
 	db := chatutil.ChatDB{
 		Users:        map[string]chatutil.User{},
