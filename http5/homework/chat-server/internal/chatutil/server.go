@@ -6,6 +6,12 @@ import (
 	"time"
 )
 
+const (
+	maxHeaderBytes = 1 << 20
+	readTimeout    = 10 * time.Second
+	writeTimeout   = 10 * time.Second
+)
+
 type User struct {
 	Username string `json:"username"`
 	Password string `json:"password"`
@@ -28,9 +34,9 @@ func (cs *ChatServer) Run(port string, handler http.Handler) error {
 	cs.httpServer = &http.Server{
 		Addr:           ":" + port,
 		Handler:        handler,
-		MaxHeaderBytes: 1 << 20,
-		ReadTimeout:    10 * time.Second,
-		WriteTimeout:   10 * time.Second,
+		MaxHeaderBytes: maxHeaderBytes,
+		ReadTimeout:    readTimeout,
+		WriteTimeout:   writeTimeout,
 	}
 
 	return cs.httpServer.ListenAndServe()

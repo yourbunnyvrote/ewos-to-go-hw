@@ -1,18 +1,18 @@
 package handlers
 
 import (
-	_ "github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/docs"
+	_ "github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/docs" // swagger doc
 	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/service"
 	"github.com/go-chi/chi"
 	httpSwagger "github.com/swaggo/http-swagger"
 )
 
 type Handler struct {
-	service *service.Service
+	serv *service.Service
 }
 
-func NewHandler(service *service.Service) *Handler {
-	return &Handler{service: service}
+func NewHandler(serv *service.Service) *Handler {
+	return &Handler{serv: serv}
 }
 
 func (h *Handler) InitRoutes() *chi.Mux {
@@ -25,18 +25,18 @@ func (h *Handler) InitRoutes() *chi.Mux {
 	r.Post("/auth", h.Authentication)
 
 	r.Group(func(r chi.Router) {
-		r.Use(h.userIdentity)
+		r.Use(userIdentity)
 		r.Use(h.isUserExists)
 		r.Post("/messages/public", h.SendPublicMessage)
-		r.Get("/messages/public", h.GetPublicMessage)
+		r.Get("/messages/public", h.ShowPublicMessage)
 	})
 
 	r.Group(func(r chi.Router) {
-		r.Use(h.userIdentity)
+		r.Use(userIdentity)
 		r.Use(h.isUserExists)
 		r.Post("/messages/private", h.SendPrivateMessage)
-		r.Get("/messages/private", h.GetPrivateMessages)
-		r.Get("/messages/users", h.GetUsersWithMessages)
+		r.Get("/messages/private", h.ShowPrivateMessages)
+		r.Get("/messages/users", h.ShowUsersWithMessages)
 	})
 
 	return r

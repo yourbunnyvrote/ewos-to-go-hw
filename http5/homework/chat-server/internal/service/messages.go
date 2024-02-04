@@ -21,6 +21,7 @@ func (cs *ChatService) SendPrivateMessage(chat chatutil.Chat, msg chatutil.Messa
 	if chat.User1 < chat.User2 {
 		chat.User1, chat.User2 = chat.User2, chat.User1
 	}
+
 	return cs.repos.SendPrivateMessage(chat, msg)
 }
 
@@ -32,6 +33,7 @@ func (cs *ChatService) GetPrivateMessages(chat chatutil.Chat) ([]chatutil.Messag
 	if chat.User1 < chat.User2 {
 		chat.User1, chat.User2 = chat.User2, chat.User1
 	}
+
 	return cs.repos.GetPrivateMessages(chat)
 }
 

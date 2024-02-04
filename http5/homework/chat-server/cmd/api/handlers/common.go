@@ -2,9 +2,10 @@ package handlers
 
 import (
 	"encoding/json"
-	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/chatutil"
 	"net/http"
 	"strconv"
+
+	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/chatutil"
 )
 
 const MessagesPerPage = 3
@@ -16,18 +17,21 @@ func decodeRequestBody(r *http.Request, requestBody interface{}) error {
 func sendResponse(w http.ResponseWriter, response interface{}) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
+
 	return json.NewEncoder(w).Encode(response)
 }
 
 func getPageParams(r *http.Request) (int, error) {
 	pageStr := r.URL.Query().Get("page")
 	page, err := strconv.Atoi(pageStr)
+
 	return page, err
 }
 
-func getPaginationIndexes(page int) (int, int) {
-	startIndex := (page - 1) * MessagesPerPage
-	endIndex := page * MessagesPerPage
+func getPaginationIndexes(page int) (startIndex, endIndex int) {
+	startIndex = (page - 1) * MessagesPerPage
+	endIndex = page * MessagesPerPage
+
 	return startIndex, endIndex
 }
 

@@ -3,12 +3,15 @@ package handlers
 import (
 	"context"
 	"encoding/base64"
-	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/chatutil"
 	"net/http"
 	"strings"
+
+	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/chatutil"
 )
 
-func (h *Handler) userIdentity(next http.Handler) http.Handler {
+const CountCredentials = 2
+
+func userIdentity(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		authHeader := r.Header.Get("Authorization")
 		if authHeader == "" {
@@ -29,7 +32,7 @@ func (h *Handler) userIdentity(next http.Handler) http.Handler {
 		}
 
 		authCredentials := strings.Split(string(decodedAuth), ":")
-		if len(authCredentials) != 2 {
+		if len(authCredentials) != CountCredentials {
 			http.Error(w, "Invalid Authorization credentials", http.StatusUnauthorized)
 			return
 		}
@@ -61,7 +64,7 @@ func (h *Handler) isUserExists(next http.Handler) http.Handler {
 			Password: password,
 		}
 
-		if _, err := h.service.GetUser(user); err != nil {
+		if _, err := h.serv.GetUser(user); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
