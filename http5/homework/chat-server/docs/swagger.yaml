@@ -1,0 +1,275 @@
+basePath: /
+definitions:
+  chatutil.Message:
+    properties:
+      content:
+        type: string
+      username:
+        type: string
+    type: object
+  chatutil.TextMessage:
+    properties:
+      content:
+        type: string
+    type: object
+  chatutil.User:
+    properties:
+      password:
+        type: string
+      username:
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: API Server for Chat Application
+  title: Chat API
+  version: "1.0"
+paths:
+  /auth:
+    post:
+      consumes:
+      - application/json
+      description: Authenticates an existing user based on the provided credentials
+      parameters:
+      - description: User object for authentication
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/chatutil.User'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User successfully authenticated
+          schema:
+            type: string
+        "400":
+          description: Invalid request body
+          schema:
+            type: string
+        "500":
+          description: JSON encoding error
+          schema:
+            type: string
+      summary: Authenticate a user
+      tags:
+      - auth
+  /message/private:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves private chat messages with pagination support
+      parameters:
+      - description: Page number for pagination (positive integer)
+        in: query
+        name: page
+        required: true
+        type: integer
+      - description: Username of the message receiver
+        in: query
+        name: receiver
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of private messages
+          schema:
+            items:
+              $ref: '#/definitions/chatutil.Message'
+            type: array
+        "400":
+          description: 'Bad Request: Invalid page number or missing receiver'
+          schema:
+            type: string
+        "401":
+          description: 'Unauthorized: Missing or invalid API key'
+          schema:
+            type: string
+        "500":
+          description: 'Bad Request: Get private messages error'
+          schema:
+            type: string
+      security:
+      - BasicAuth: []
+      summary: Get private chat messages
+      tags:
+      - messages
+    post:
+      consumes:
+      - application/json
+      description: Sends a private chat message to a specific user
+      parameters:
+      - description: Text message object for sending private message
+        in: body
+        name: text
+        required: true
+        schema:
+          $ref: '#/definitions/chatutil.TextMessage'
+      - description: Username of the message receiver
+        in: query
+        name: receiver
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Message successfully sent
+          schema:
+            $ref: '#/definitions/chatutil.Message'
+        "400":
+          description: 'Bad Request: Invalid request body or missing receiver'
+          schema:
+            type: string
+        "401":
+          description: 'Unauthorized: Missing or invalid API key'
+          schema:
+            type: string
+        "500":
+          description: JSON encoding error
+          schema:
+            type: string
+      security:
+      - BasicAuth: []
+      summary: Send a private chat message
+      tags:
+      - messages
+  /message/public:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves public chat messages with pagination support
+      parameters:
+      - description: Page number for pagination (positive integer)
+        in: query
+        name: page
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of public messages
+          schema:
+            items:
+              $ref: '#/definitions/chatutil.Message'
+            type: array
+        "400":
+          description: 'Bad Request: Invalid page number'
+          schema:
+            type: string
+        "401":
+          description: 'Unauthorized: Missing or invalid API key'
+          schema:
+            type: string
+        "500":
+          description: 'Bad Request: Get public messages error'
+          schema:
+            type: string
+      security:
+      - BasicAuth: []
+      summary: Get public chat messages
+      tags:
+      - messages
+    post:
+      consumes:
+      - application/json
+      description: Sends a public chat message using the provided text content
+      parameters:
+      - description: Text message object for sending public message
+        in: body
+        name: text
+        required: true
+        schema:
+          $ref: '#/definitions/chatutil.TextMessage'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Message successfully sent
+          schema:
+            $ref: '#/definitions/chatutil.Message'
+        "400":
+          description: 'Bad Request: Invalid request body'
+          schema:
+            type: string
+        "401":
+          description: 'Unauthorized: Missing or invalid API key'
+          schema:
+            type: string
+        "500":
+          description: JSON encoding error
+          schema:
+            type: string
+      security:
+      - BasicAuth: []
+      summary: Send a public chat message
+      tags:
+      - messages
+  /messages/users:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves a list of users who have sent private messages to the
+        authenticated user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of usernames with received private messages
+          schema:
+            items:
+              type: string
+            type: array
+        "400":
+          description: 'Bad Request: Get users with messages error'
+          schema:
+            type: string
+        "401":
+          description: 'Unauthorized: Missing or invalid API key'
+          schema:
+            type: string
+        "500":
+          description: JSON encoding error
+          schema:
+            type: string
+      security:
+      - BasicAuth: []
+      summary: Get users with received private messages
+      tags:
+      - messages
+  /register:
+    post:
+      consumes:
+      - application/json
+      description: Creates a new user account based on the provided user data
+      parameters:
+      - description: User object for registration
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/chatutil.User'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User successfully registered
+          schema:
+            type: string
+        "400":
+          description: Invalid request body
+          schema:
+            type: string
+        "500":
+          description: JSON encoding error
+          schema:
+            type: string
+      summary: Register a new user
+      tags:
+      - auth
+swagger: "2.0"

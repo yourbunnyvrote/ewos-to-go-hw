@@ -56,7 +56,12 @@ func (h *Handler) isUserExists(next http.Handler) http.Handler {
 			return
 		}
 
-		if _, err := h.service.GetUser(chatutil.User{Username: username, Password: password}); err != nil {
+		user := chatutil.User{
+			Username: username,
+			Password: password,
+		}
+
+		if _, err := h.service.GetUser(user); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
