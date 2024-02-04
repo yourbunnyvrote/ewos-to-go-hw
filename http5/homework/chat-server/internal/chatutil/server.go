@@ -12,11 +12,13 @@ type User struct {
 }
 
 type Message struct {
-	Username string      `json:"username"`
-	Content  TextMessage `json:"content"`
+	Username string `json:"username"`
+	Content  string `json:"content"`
 }
 
-type TextMessage string
+type TextMessage struct {
+	Content string `json:"content"`
+}
 
 type ChatServer struct {
 	httpServer *http.Server

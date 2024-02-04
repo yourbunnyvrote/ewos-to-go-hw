@@ -27,16 +27,16 @@ func (h *Handler) InitRoutes() *chi.Mux {
 	r.Group(func(r chi.Router) {
 		r.Use(h.userIdentity)
 		r.Use(h.isUserExists)
-		r.Post("/messages", h.SendPublicMessage)
-		r.Get("/messages", h.GetPublicMessage)
+		r.Post("/messages/public", h.SendPublicMessage)
+		r.Get("/messages/public", h.GetPublicMessage)
 	})
 
 	r.Group(func(r chi.Router) {
 		r.Use(h.userIdentity)
 		r.Use(h.isUserExists)
-		r.Post("/messages", h.SendPrivateMessage)
-		r.Get("/messages", h.GetPrivateMessages)
-		r.Get("/users/messages", h.GetUsersWithMessages)
+		r.Post("/messages/private", h.SendPrivateMessage)
+		r.Get("/messages/private", h.GetPrivateMessages)
+		r.Get("/messages/users", h.GetUsersWithMessages)
 	})
 
 	return r
