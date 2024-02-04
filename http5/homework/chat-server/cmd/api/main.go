@@ -1,17 +1,24 @@
 package main
 
 import (
-	chatutil "github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server"
-	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/handlers"
+	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/cmd/api/handlers"
+	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/chatutil"
 	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/repository"
 	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/service"
 	"log"
 )
 
+// @title        Chat API
+// @version      1.0
+// @description  API Server for Chat Application
+
+// @host localhost:8080
+// @BasePath  /
 func main() {
 	db := chatutil.ChatDB{
-		Users:      map[string]chatutil.User{},
-		PublicChat: []chatutil.Message{},
+		Users:        map[string]chatutil.User{},
+		PublicChat:   []chatutil.Message{},
+		PrivateChats: map[chatutil.Chat][]chatutil.Message{},
 	}
 	repos := repository.NewRepository(&db)
 	services := service.NewService(repos)

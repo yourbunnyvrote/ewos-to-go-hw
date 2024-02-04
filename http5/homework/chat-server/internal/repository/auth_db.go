@@ -2,7 +2,7 @@ package repository
 
 import (
 	"errors"
-	chatutil "github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server"
+	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/chatutil"
 )
 
 var ErrUserAlreadyExists = errors.New("user already exists")
@@ -27,13 +27,13 @@ func (a *AuthDB) CreateUser(user chatutil.User) (string, error) {
 	return user.Username, nil
 }
 
-func (a *AuthDB) GetUser(username, password string) (chatutil.User, error) {
-	findUser, exist := a.db.Users[username]
+func (a *AuthDB) GetUser(user chatutil.User) (chatutil.User, error) {
+	findUser, exist := a.db.Users[user.Username]
 	if !exist {
 		return chatutil.User{}, ErrUserNotFound
 	}
 
-	if findUser.Password != password {
+	if findUser.Password != user.Password {
 		return chatutil.User{}, ErrIncorrectPassword
 	}
 

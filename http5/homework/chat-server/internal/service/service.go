@@ -1,18 +1,21 @@
 package service
 
 import (
-	chatutil "github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server"
+	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/chatutil"
 	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/repository"
 )
 
 type Authorization interface {
 	CreateUser(user chatutil.User) (string, error)
-	GetUser(username, password string) (string, error)
+	GetUser(user chatutil.User) (string, error)
 }
 
 type Chatting interface {
-	SendMessage(msg chatutil.Message) error
-	GetMessage() ([]chatutil.Message, error)
+	SendPublicMessage(msg chatutil.Message) error
+	SendPrivateMessage(chat chatutil.Chat, msg chatutil.Message) error
+	GetPublicMessages() ([]chatutil.Message, error)
+	GetPrivateMessages(chat chatutil.Chat) ([]chatutil.Message, error)
+	GetUsersWithMessage(receiver string) ([]string, error)
 }
 
 type Service struct {

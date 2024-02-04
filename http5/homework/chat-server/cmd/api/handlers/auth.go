@@ -1,14 +1,13 @@
 package handlers
 
 import (
-	"encoding/json"
-	chatutil "github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server"
+	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/chatutil"
 	"net/http"
 )
 
 func (h *Handler) Registration(w http.ResponseWriter, r *http.Request) {
 	var newUser chatutil.User
-	err := json.NewDecoder(r.Body).Decode(&newUser)
+	err := decodeRequestBody(r, &newUser)
 	if err != nil {
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
 		return
@@ -20,9 +19,7 @@ func (h *Handler) Registration(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	err = json.NewEncoder(w).Encode(response)
+	err = sendResponse(w, response)
 	if err != nil {
 		http.Error(w, "JSON encoding error", http.StatusInternalServerError)
 		return
@@ -31,21 +28,19 @@ func (h *Handler) Registration(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) Authentication(w http.ResponseWriter, r *http.Request) {
 	var existingUser chatutil.User
-	err := json.NewDecoder(r.Body).Decode(&existingUser)
+	err := decodeRequestBody(r, &existingUser)
 	if err != nil {
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
 		return
 	}
 
-	response, err := h.service.GetUser(existingUser.Username, existingUser.Password)
+	response, err := h.service.GetUser(existingUser)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	err = json.NewEncoder(w).Encode(response)
+	err = sendResponse(w, response)
 	if err != nil {
 		http.Error(w, "JSON encoding error", http.StatusInternalServerError)
 		return

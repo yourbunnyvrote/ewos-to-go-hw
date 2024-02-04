@@ -3,6 +3,7 @@ package handlers
 import (
 	"context"
 	"encoding/base64"
+	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/chatutil"
 	"net/http"
 	"strings"
 )
@@ -55,7 +56,7 @@ func (h *Handler) isUserExists(next http.Handler) http.Handler {
 			return
 		}
 
-		if _, err := h.service.GetUser(username, password); err != nil {
+		if _, err := h.service.GetUser(chatutil.User{Username: username, Password: password}); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
