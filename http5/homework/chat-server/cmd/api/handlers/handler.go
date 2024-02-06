@@ -21,22 +21,24 @@ func (h *Handler) InitRoutes() *chi.Mux {
 		httpSwagger.URL("doc.json"),
 	))
 
-	r.Post("/register", h.Registration)
-	r.Post("/auth", h.Authentication)
+	r.Route("/v1", func(r chi.Router) {
+		r.Post("/register", h.Registration)
+		r.Post("/auth", h.Authentication)
 
-	r.Group(func(r chi.Router) {
-		r.Use(userIdentity)
-		r.Use(h.isUserExists)
-		r.Post("/messages/public", h.SendPublicMessage)
-		r.Get("/messages/public", h.ShowPublicMessage)
-	})
+		r.Group(func(r chi.Router) {
+			r.Use(userIdentity)
+			r.Use(h.isUserExists)
+			r.Post("/messages/public", h.SendPublicMessage)
+			r.Get("/messages/public", h.ShowPublicMessage)
+		})
 
-	r.Group(func(r chi.Router) {
-		r.Use(userIdentity)
-		r.Use(h.isUserExists)
-		r.Post("/messages/private", h.SendPrivateMessage)
-		r.Get("/messages/private", h.ShowPrivateMessages)
-		r.Get("/messages/users", h.ShowUsersWithMessages)
+		r.Group(func(r chi.Router) {
+			r.Use(userIdentity)
+			r.Use(h.isUserExists)
+			r.Post("/messages/private", h.SendPrivateMessage)
+			r.Get("/messages/private", h.ShowPrivateMessages)
+			r.Get("/messages/users", h.ShowUsersWithMessages)
+		})
 	})
 
 	return r
