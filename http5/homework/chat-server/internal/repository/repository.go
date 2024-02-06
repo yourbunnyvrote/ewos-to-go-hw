@@ -5,8 +5,8 @@ import (
 )
 
 type Authorization interface {
-	CreateUser(user chatutil.User) (string, error)
-	GetUser(user chatutil.User) (chatutil.User, error)
+	CreateUser(user chatutil.User) (string, int, error)
+	GetUser(user chatutil.User) (chatutil.User, int, error)
 }
 
 type Chatting interface {

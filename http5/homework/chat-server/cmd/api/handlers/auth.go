@@ -23,19 +23,19 @@ func (h *Handler) Registration(w http.ResponseWriter, r *http.Request) {
 
 	err := decodeRequestBody(r, &newUser)
 	if err != nil {
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	response, err := h.serv.CreateUser(newUser)
+	response, statusCode, err := h.serv.CreateUser(newUser)
 	if err != nil {
-		http.Error(w, "Create user error", http.StatusInternalServerError)
+		http.Error(w, err.Error(), statusCode)
 		return
 	}
 
-	err = sendResponse(w, response)
+	err = sendResponse(w, statusCode, response)
 	if err != nil {
-		http.Error(w, "JSON encoding error", http.StatusInternalServerError)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 }
@@ -57,19 +57,19 @@ func (h *Handler) Authentication(w http.ResponseWriter, r *http.Request) {
 
 	err := decodeRequestBody(r, &existingUser)
 	if err != nil {
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	response, err := h.serv.GetUser(existingUser)
+	response, statusCode, err := h.serv.GetUser(existingUser)
+	if err != nil {
+		http.Error(w, err.Error(), statusCode)
+		return
+	}
+
+	err = sendResponse(w, statusCode, response)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	err = sendResponse(w, response)
-	if err != nil {
-		http.Error(w, "JSON encoding error", http.StatusInternalServerError)
 		return
 	}
 }

@@ -30,12 +30,12 @@ func (pc *ChatsDB) GetPrivateMessages(chat chatutil.Chat) ([]chatutil.Message, e
 	return pc.db.PrivateChats[chat], nil
 }
 
-func (pc *ChatsDB) GetUsersWithMessage(receiver string) ([]string, error) {
+func (pc *ChatsDB) GetUsersWithMessage(username string) ([]string, error) {
 	result := make([]string, 0)
 
 	for key := range pc.db.PrivateChats {
-		if key.User1 == receiver || key.User2 == receiver {
-			if key.User1 == receiver {
+		if key.User1 == username || key.User2 == username {
+			if key.User1 == username {
 				result = append(result, key.User2)
 			} else {
 				result = append(result, key.User1)

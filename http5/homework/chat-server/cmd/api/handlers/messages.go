@@ -29,9 +29,9 @@ func (h *Handler) SendPublicMessage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	username, ok := r.Context().Value("username").(string)
+	username, ok := r.Context().Value(RouteContextUsernameValue).(string)
 	if !ok {
-		http.Error(w, "Failed to get username from context", http.StatusInternalServerError)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -46,9 +46,9 @@ func (h *Handler) SendPublicMessage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = sendResponse(w, msg)
+	err = sendResponse(w, http.StatusOK, msg)
 	if err != nil {
-		http.Error(w, "JSON encoding error", http.StatusInternalServerError)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 }
@@ -79,7 +79,7 @@ func (h *Handler) SendPrivateMessage(w http.ResponseWriter, r *http.Request) {
 
 	receiver := r.URL.Query().Get("receiver")
 
-	sender, ok := r.Context().Value("username").(string)
+	sender, ok := r.Context().Value(RouteContextUsernameValue).(string)
 	if !ok {
 		http.Error(w, "Failed to get username from context", http.StatusInternalServerError)
 		return
@@ -101,7 +101,7 @@ func (h *Handler) SendPrivateMessage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = sendResponse(w, msg)
+	err = sendResponse(w, http.StatusOK, msg)
 	if err != nil {
 		http.Error(w, "JSON encoding error", http.StatusInternalServerError)
 		return
@@ -128,15 +128,25 @@ func (h *Handler) ShowPublicMessage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	startIndex, endIndex := getPaginationIndexes(page)
-
 	messages, err := h.serv.GetPublicMessages()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	handleMessages(w, messages, startIndex, endIndex)
+	startIndex, endIndex := getPaginationIndexes(page)
+
+	pageMessages, err := paginateMessages(messages, startIndex, endIndex)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	err = sendResponse(w, http.StatusOK, pageMessages)
+	if err != nil {
+		http.Error(w, "JSON encoding error", http.StatusInternalServerError)
+		return
+	}
 }
 
 // ShowPrivateMessages
@@ -162,7 +172,7 @@ func (h *Handler) ShowPrivateMessages(w http.ResponseWriter, r *http.Request) {
 
 	receiver := r.URL.Query().Get("receiver")
 
-	sender, ok := r.Context().Value("username").(string)
+	sender, ok := r.Context().Value(RouteContextUsernameValue).(string)
 	if !ok {
 		http.Error(w, "Failed to get username from context", http.StatusInternalServerError)
 		return
@@ -180,7 +190,18 @@ func (h *Handler) ShowPrivateMessages(w http.ResponseWriter, r *http.Request) {
 	}
 
 	startIndex, endIndex := getPaginationIndexes(page)
-	handleMessages(w, messages, startIndex, endIndex)
+
+	pageMessages, err := paginateMessages(messages, startIndex, endIndex)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	err = sendResponse(w, http.StatusOK, pageMessages)
+	if err != nil {
+		http.Error(w, "JSON encoding error", http.StatusInternalServerError)
+		return
+	}
 }
 
 // ShowUsersWithMessages
@@ -196,7 +217,7 @@ func (h *Handler) ShowPrivateMessages(w http.ResponseWriter, r *http.Request) {
 // @Failure 500 {string} string "JSON encoding error"
 // @Router /messages/users [get]
 func (h *Handler) ShowUsersWithMessages(w http.ResponseWriter, r *http.Request) {
-	username, ok := r.Context().Value("username").(string)
+	username, ok := r.Context().Value(RouteContextUsernameValue).(string)
 	if !ok {
 		http.Error(w, "Failed to get username from context", http.StatusInternalServerError)
 		return
@@ -208,7 +229,7 @@ func (h *Handler) ShowUsersWithMessages(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	err = sendResponse(w, usersList)
+	err = sendResponse(w, http.StatusOK, usersList)
 	if err != nil {
 		http.Error(w, "JSON encoding error", http.StatusInternalServerError)
 		return

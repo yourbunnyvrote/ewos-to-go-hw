@@ -1,9 +1,12 @@
 package service
 
 import (
+	"errors"
 	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/chatutil"
 	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/repository"
 )
+
+var ErrMsgEmpty = errors.New("message is empty")
 
 type ChatService struct {
 	repos repository.Chatting
@@ -14,10 +17,18 @@ func NewChatService(repos repository.Chatting) *ChatService {
 }
 
 func (cs *ChatService) SendPublicMessage(msg chatutil.Message) error {
+	if msg.Content == "" {
+		return ErrMsgEmpty
+	}
+
 	return cs.repos.SendPublicMessage(msg)
 }
 
 func (cs *ChatService) SendPrivateMessage(chat chatutil.Chat, msg chatutil.Message) error {
+	if msg.Content == "" {
+		return ErrMsgEmpty
+	}
+
 	if chat.User1 < chat.User2 {
 		chat.User1, chat.User2 = chat.User2, chat.User1
 	}

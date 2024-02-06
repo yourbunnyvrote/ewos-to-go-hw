@@ -2,6 +2,7 @@ package repository
 
 import (
 	"errors"
+	"net/http"
 
 	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/chatutil"
 )
@@ -9,7 +10,6 @@ import (
 var (
 	ErrUserAlreadyExists = errors.New("user already exists")
 	ErrUserNotFound      = errors.New("user not found")
-	ErrIncorrectPassword = errors.New("incorrect password")
 )
 
 type AuthDB struct {
@@ -20,25 +20,21 @@ func NewAuthDB(db *chatutil.ChatDB) *AuthDB {
 	return &AuthDB{db: db}
 }
 
-func (a *AuthDB) CreateUser(user chatutil.User) (string, error) {
+func (a *AuthDB) CreateUser(user chatutil.User) (string, int, error) {
 	if _, exists := a.db.Users[user.Username]; exists {
-		return "", ErrUserAlreadyExists
+		return "", http.StatusConflict, ErrUserAlreadyExists
 	}
 
 	a.db.Users[user.Username] = user
 
-	return user.Username, nil
+	return user.Username, http.StatusCreated, nil
 }
 
-func (a *AuthDB) GetUser(user chatutil.User) (chatutil.User, error) {
+func (a *AuthDB) GetUser(user chatutil.User) (chatutil.User, int, error) {
 	findUser, exist := a.db.Users[user.Username]
 	if !exist {
-		return chatutil.User{}, ErrUserNotFound
+		return chatutil.User{}, http.StatusUnprocessableEntity, ErrUserNotFound
 	}
 
-	if findUser.Password != user.Password {
-		return chatutil.User{}, ErrIncorrectPassword
-	}
-
-	return findUser, nil
+	return findUser, http.StatusOK, nil
 }

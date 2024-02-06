@@ -9,7 +9,11 @@ import (
 	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/chatutil"
 )
 
-const CountCredentials = 2
+const (
+	RouteContextUsernameValue = "username"
+	RouteContextPasswordValue = "password"
+	CountCredentials          = 2
+)
 
 func userIdentity(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -37,8 +41,8 @@ func userIdentity(next http.Handler) http.Handler {
 			return
 		}
 
-		ctx := context.WithValue(r.Context(), "username", authCredentials[0])
-		ctx = context.WithValue(ctx, "password", authCredentials[1])
+		ctx := context.WithValue(r.Context(), RouteContextUsernameValue, authCredentials[0])
+		ctx = context.WithValue(ctx, RouteContextPasswordValue, authCredentials[1])
 		r = r.WithContext(ctx)
 
 		next.ServeHTTP(w, r)
@@ -47,13 +51,13 @@ func userIdentity(next http.Handler) http.Handler {
 
 func (h *Handler) isUserExists(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		username, ok := r.Context().Value("username").(string)
+		username, ok := r.Context().Value(RouteContextUsernameValue).(string)
 		if !ok {
 			http.Error(w, "Failed to get username from context", http.StatusInternalServerError)
 			return
 		}
 
-		password, ok := r.Context().Value("password").(string)
+		password, ok := r.Context().Value(RouteContextPasswordValue).(string)
 		if !ok {
 			http.Error(w, "Failed to get password from context", http.StatusInternalServerError)
 			return
@@ -64,8 +68,8 @@ func (h *Handler) isUserExists(next http.Handler) http.Handler {
 			Password: password,
 		}
 
-		if _, err := h.serv.GetUser(user); err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+		if _, statusCode, err := h.serv.GetUser(user); err != nil {
+			http.Error(w, err.Error(), statusCode)
 			return
 		}
 

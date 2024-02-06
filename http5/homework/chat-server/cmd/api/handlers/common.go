@@ -2,27 +2,33 @@ package handlers
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"strconv"
 
 	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/chatutil"
 )
 
-const MessagesPerPage = 3
+const (
+	PageQueryParameter = "page"
+	MessagesPerPage    = 3
+)
+
+var ErrEndOfPages = errors.New("no messages on this page")
 
 func decodeRequestBody(r *http.Request, requestBody interface{}) error {
 	return json.NewDecoder(r.Body).Decode(requestBody)
 }
 
-func sendResponse(w http.ResponseWriter, response interface{}) error {
+func sendResponse(w http.ResponseWriter, status int, response interface{}) error {
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
+	w.WriteHeader(status)
 
 	return json.NewEncoder(w).Encode(response)
 }
 
 func getPageParams(r *http.Request) (int, error) {
-	pageStr := r.URL.Query().Get("page")
+	pageStr := r.URL.Query().Get(PageQueryParameter)
 	page, err := strconv.Atoi(pageStr)
 
 	return page, err
@@ -35,21 +41,14 @@ func getPaginationIndexes(page int) (startIndex, endIndex int) {
 	return startIndex, endIndex
 }
 
-func handleMessages(w http.ResponseWriter, messages []chatutil.Message, startIndex, endIndex int) {
+func paginateMessages(messages []chatutil.Message, startIndex, endIndex int) ([]chatutil.Message, error) {
 	if startIndex >= len(messages) {
-		http.Error(w, "No messages on this page", http.StatusNotFound)
-		return
+		return nil, ErrEndOfPages
 	}
 
 	if endIndex > len(messages) {
 		endIndex = len(messages)
 	}
 
-	pageMessages := messages[startIndex:endIndex]
-
-	err := sendResponse(w, pageMessages)
-	if err != nil {
-		http.Error(w, "JSON encoding error", http.StatusInternalServerError)
-		return
-	}
+	return messages[startIndex:endIndex], nil
 }
