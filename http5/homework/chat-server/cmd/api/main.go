@@ -1,12 +1,15 @@
 package main
 
 import (
-	"log"
-
+	"context"
 	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/cmd/api/handlers"
 	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/chatutil"
 	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/repository"
 	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/service"
+	"log"
+	"os"
+	"os/signal"
+	"syscall"
 )
 
 // @title        Chat API
@@ -30,7 +33,18 @@ func main() {
 	handler := handlers.NewHandler(services)
 
 	server := new(chatutil.ChatServer)
-	if err := server.Run("8080", handler.InitRoutes()); err != nil {
-		log.Fatalf("error running chat server: %s", err)
+
+	go func() {
+		if err := server.Run("8080", handler.InitRoutes()); err != nil {
+			log.Fatalf("error running chat server: %s", err)
+		}
+	}()
+
+	stop := make(chan os.Signal, 1)
+	signal.Notify(stop, syscall.SIGINT)
+	<-stop
+
+	if err := server.Shutdown(context.Background()); err != nil {
+		log.Fatalf("error shutting down server: %s", err)
 	}
 }
