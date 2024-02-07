@@ -95,12 +95,6 @@ func (h *PrivateChatHandler) SendPrivateMessage(w http.ResponseWriter, r *http.R
 //	@Failure		500	{string}	string				"Bad Request: Get private messages error"
 //	@Router			/messages/private [get]
 func (h *PrivateChatHandler) ShowPrivateMessages(w http.ResponseWriter, r *http.Request) {
-	limit, offset, err := getPageParams(r)
-	if err != nil || limit <= 0 || offset <= 0 {
-		http.Error(w, "Invalid page parameters", http.StatusBadRequest)
-		return
-	}
-
 	receiver := r.URL.Query().Get(UsernameQueryParameter)
 
 	sender, ok := r.Context().Value(RouteContextUsernameValue).(string)
@@ -120,9 +114,7 @@ func (h *PrivateChatHandler) ShowPrivateMessages(w http.ResponseWriter, r *http.
 		return
 	}
 
-	startIndex, endIndex := getPaginationIndexes(limit, offset)
-
-	pageMessages, err := paginateMessages(messages, startIndex, endIndex)
+	pageMessages, err := paginateMessages(r, messages)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return

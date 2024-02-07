@@ -84,21 +84,13 @@ func (h *PublicChatHandler) SendPublicMessage(w http.ResponseWriter, r *http.Req
 //	@Failure		500	{string}	string				"Bad Request: Get public messages error"
 //	@Router			/messages/public [get]
 func (h *PublicChatHandler) ShowPublicMessage(w http.ResponseWriter, r *http.Request) {
-	limit, offset, err := getPageParams(r)
-	if err != nil || limit <= 0 || offset <= 0 {
-		http.Error(w, "Invalid page parameters", http.StatusBadRequest)
-		return
-	}
-
 	messages, err := h.serv.GetPublicMessages()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	startIndex, endIndex := getPaginationIndexes(limit, offset)
-
-	pageMessages, err := paginateMessages(messages, startIndex, endIndex)
+	pageMessages, err := paginateMessages(r, messages)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return

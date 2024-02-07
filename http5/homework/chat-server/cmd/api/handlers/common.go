@@ -4,9 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
-	"strconv"
-
-	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/domain/entities"
 )
 
 const (
@@ -25,37 +22,4 @@ func sendResponse(w http.ResponseWriter, status int, response interface{}) error
 	w.WriteHeader(status)
 
 	return json.NewEncoder(w).Encode(response)
-}
-
-func getPageParams(r *http.Request) (limit int, offset int, err error) {
-	limitStr := r.URL.Query().Get(LimitQueryParameter)
-
-	limit, err = strconv.Atoi(limitStr)
-	if err != nil {
-		return 0, 0, err
-	}
-
-	offsetStr := r.URL.Query().Get(OffsetQueryParameter)
-	offset, err = strconv.Atoi(offsetStr)
-
-	return limit, offset, err
-}
-
-func getPaginationIndexes(limit, offset int) (startIndex, endIndex int) {
-	startIndex = offset - 1
-	endIndex = offset - 1 + limit
-
-	return startIndex, endIndex
-}
-
-func paginateMessages(messages []entities.Message, startIndex, endIndex int) ([]entities.Message, error) {
-	if startIndex >= len(messages) {
-		return nil, ErrEndOfPages
-	}
-
-	if endIndex > len(messages) {
-		endIndex = len(messages)
-	}
-
-	return messages[startIndex:endIndex], nil
 }
