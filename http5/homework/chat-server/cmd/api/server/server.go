@@ -1,4 +1,4 @@
-package chatutil
+package server
 
 import (
 	"context"
@@ -11,10 +11,6 @@ const (
 	readTimeout    = 10 * time.Second
 	writeTimeout   = 10 * time.Second
 )
-
-type TextMessage struct {
-	Content string `json:"content"`
-}
 
 type ChatServer struct {
 	httpServer *http.Server

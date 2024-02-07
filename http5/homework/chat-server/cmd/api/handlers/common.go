@@ -10,8 +10,8 @@ import (
 )
 
 const (
-	PageQueryParameter = "page"
-	MessagesPerPage    = 3
+	LimitQueryParameter  = "limit"
+	OffsetQueryParameter = "offset"
 )
 
 var ErrEndOfPages = errors.New("no messages on this page")
@@ -27,16 +27,23 @@ func sendResponse(w http.ResponseWriter, status int, response interface{}) error
 	return json.NewEncoder(w).Encode(response)
 }
 
-func getPageParams(r *http.Request) (int, error) {
-	pageStr := r.URL.Query().Get(PageQueryParameter)
-	page, err := strconv.Atoi(pageStr)
+func getPageParams(r *http.Request) (int, int, error) {
+	limitStr := r.URL.Query().Get(LimitQueryParameter)
 
-	return page, err
+	limit, err := strconv.Atoi(limitStr)
+	if err != nil {
+		return 0, 0, err
+	}
+
+	offsetStr := r.URL.Query().Get(OffsetQueryParameter)
+	offset, err := strconv.Atoi(offsetStr)
+
+	return limit, offset, err
 }
 
-func getPaginationIndexes(page int) (startIndex, endIndex int) {
-	startIndex = (page - 1) * MessagesPerPage
-	endIndex = page * MessagesPerPage
+func getPaginationIndexes(limit, offset int) (startIndex, endIndex int) {
+	startIndex = offset - 1
+	endIndex = offset - 1 + limit
 
 	return startIndex, endIndex
 }

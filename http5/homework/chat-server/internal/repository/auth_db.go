@@ -14,16 +14,11 @@ var (
 	ErrDataError         = errors.New("incorrect data in memory db")
 )
 
-type Authorization interface {
-	CreateUser(user entities.User) (string, int, error)
-	GetUser(user entities.User) (entities.User, int, error)
-}
-
 type AuthDB struct {
-	db InMemoryDB
+	db *database.ChatDB
 }
 
-func NewAuthDB(db InMemoryDB) *AuthDB {
+func NewAuthDB(db *database.ChatDB) *AuthDB {
 	return &AuthDB{db: db}
 }
 

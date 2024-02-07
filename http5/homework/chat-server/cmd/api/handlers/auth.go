@@ -14,7 +14,7 @@ import (
 //	@Tags			auth
 //	@Accept			json
 //	@Produce		json
-//	@Param			user	body		chatutil.User	true	"User object for registration"
+//	@Param			user	body		request.User	true	"User object for registration"
 //	@Success		200		{object}	string			"User successfully registered"
 //	@Failure		400		{string}	string			"Invalid request body"
 //	@Failure		500		{string}	string			"Create user error"
@@ -31,7 +31,7 @@ func (h *Handler) Registration(w http.ResponseWriter, r *http.Request) {
 
 	newUser := entities.User(newUserJSON)
 
-	response, statusCode, err := h.serv.CreateUser(newUser)
+	response, statusCode, err := h.serv.Auth.CreateUser(newUser)
 	if err != nil {
 		http.Error(w, err.Error(), statusCode)
 		return
@@ -51,7 +51,7 @@ func (h *Handler) Registration(w http.ResponseWriter, r *http.Request) {
 //	@Tags			auth
 //	@Accept			json
 //	@Produce		json
-//	@Param			user	body		chatutil.User	true	"User object for authentication"
+//	@Param			user	body		request.User	true	"User object for authentication"
 //	@Success		200		{object}	string			"User successfully authenticated"
 //	@Failure		400		{string}	string			"Invalid request body"
 //	@Failure		500		{string}	string			"Authentication error"
@@ -68,7 +68,7 @@ func (h *Handler) Authentication(w http.ResponseWriter, r *http.Request) {
 
 	existingUser := entities.User(existingUserJSON)
 
-	response, statusCode, err := h.serv.GetUser(existingUser)
+	response, statusCode, err := h.serv.Auth.GetUser(existingUser)
 	if err != nil {
 		http.Error(w, err.Error(), statusCode)
 		return

@@ -2,15 +2,14 @@ package main
 
 import (
 	"context"
+	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/cmd/api/server"
+	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/database"
 	"log"
 	"os"
 	"os/signal"
 	"syscall"
 
-	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/database"
-
 	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/cmd/api/handlers"
-	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/chatutil"
 	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/repository"
 	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/service"
 )
@@ -31,10 +30,10 @@ func main() {
 	services := service.NewService(repos)
 	handler := handlers.NewHandler(services)
 
-	server := new(chatutil.ChatServer)
+	serv := new(server.ChatServer)
 
 	go func() {
-		if err := server.Run("8080", handler.InitRoutes()); err != nil {
+		if err := serv.Run("8080", handler.InitRoutes()); err != nil {
 			log.Fatalf("error running chat server: %s", err)
 		}
 	}()
@@ -43,7 +42,7 @@ func main() {
 	signal.Notify(stop, syscall.SIGINT)
 	<-stop
 
-	if err := server.Shutdown(context.Background()); err != nil {
+	if err := serv.Shutdown(context.Background()); err != nil {
 		log.Fatalf("error shutting down server: %s", err)
 	}
 }

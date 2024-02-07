@@ -20,13 +20,13 @@ type Chatting interface {
 }
 
 type Service struct {
-	Authorization
-	Chatting
+	Auth Authorization
+	Chat Chatting
 }
 
 func NewService(repos *repository.Repository) *Service {
 	return &Service{
-		Authorization: NewAuthService(repos.Auth),
-		Chatting:      NewChatService(repos.Chat),
+		Auth: NewAuthService(repos.Auth),
+		Chat: NewChatService(repos.Chat),
 	}
 }

@@ -10,6 +10,11 @@ type InMemoryDB interface {
 	Get(key string) interface{}
 }
 
+type Authorization interface {
+	CreateUser(user entities.User) (string, int, error)
+	GetUser(user entities.User) (entities.User, int, error)
+}
+
 type Chatting interface {
 	SendPublicMessage(msg entities.Message) error
 	SendPrivateMessage(chat database.Chat, msg entities.Message) error
@@ -24,8 +29,13 @@ type Repository struct {
 }
 
 func NewRepository(db InMemoryDB) *Repository {
+	chatDB, ok := db.(*database.ChatDB)
+	if !ok {
+		return nil
+	}
+
 	return &Repository{
-		Auth: NewAuthDB(db),
-		Chat: NewChatsDB(db),
+		Auth: NewAuthDB(chatDB),
+		Chat: NewChattingDB(chatDB),
 	}
 }

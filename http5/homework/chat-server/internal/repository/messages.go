@@ -1,19 +1,26 @@
 package repository
 
 import (
+	"errors"
 	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/database"
 	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/domain/entities"
 )
 
-type ChatsDB struct {
-	db InMemoryDB
+var ErrMsgIsEmpty = errors.New("message is empty")
+
+type ChattingDB struct {
+	db *database.ChatDB
 }
 
-func NewChatsDB(db InMemoryDB) *ChatsDB {
-	return &ChatsDB{db: db}
+func NewChattingDB(db *database.ChatDB) *ChattingDB {
+	return &ChattingDB{db: db}
 }
 
-func (pc *ChatsDB) SendPublicMessage(msg entities.Message) error {
+func (pc *ChattingDB) SendPublicMessage(msg entities.Message) error {
+	if msg.Content == "" {
+		return ErrMsgIsEmpty
+	}
+
 	publicChat := pc.db.Get("public chats")
 
 	messages, ok := publicChat.(database.PublicChatsData)
@@ -28,7 +35,11 @@ func (pc *ChatsDB) SendPublicMessage(msg entities.Message) error {
 	return nil
 }
 
-func (pc *ChatsDB) SendPrivateMessage(chat database.Chat, msg entities.Message) error {
+func (pc *ChattingDB) SendPrivateMessage(chat database.Chat, msg entities.Message) error {
+	if msg.Content == "" {
+		return ErrMsgIsEmpty
+	}
+
 	publicChat := pc.db.Get("private chats")
 
 	chats, ok := publicChat.(database.PrivateChatsData)
@@ -43,7 +54,7 @@ func (pc *ChatsDB) SendPrivateMessage(chat database.Chat, msg entities.Message) 
 	return nil
 }
 
-func (pc *ChatsDB) GetPublicMessages() ([]entities.Message, error) {
+func (pc *ChattingDB) GetPublicMessages() ([]entities.Message, error) {
 	publicChat := pc.db.Get("public chats")
 
 	messages, ok := publicChat.(database.PublicChatsData)
@@ -54,7 +65,7 @@ func (pc *ChatsDB) GetPublicMessages() ([]entities.Message, error) {
 	return messages, nil
 }
 
-func (pc *ChatsDB) GetPrivateMessages(chat database.Chat) ([]entities.Message, error) {
+func (pc *ChattingDB) GetPrivateMessages(chat database.Chat) ([]entities.Message, error) {
 	publicChat := pc.db.Get("private chats")
 
 	chats, ok := publicChat.(database.PrivateChatsData)
@@ -65,7 +76,7 @@ func (pc *ChatsDB) GetPrivateMessages(chat database.Chat) ([]entities.Message, e
 	return chats[chat], nil
 }
 
-func (pc *ChatsDB) GetUsersWithMessage(username string) ([]string, error) {
+func (pc *ChattingDB) GetUsersWithMessage(username string) ([]string, error) {
 	publicChat := pc.db.Get("private chats")
 
 	chats, ok := publicChat.(database.PrivateChatsData)

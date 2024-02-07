@@ -1,13 +1,14 @@
 package handlers
 
 import (
+	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/api/request"
 	"net/http"
 
 	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/database"
 	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/domain/entities"
-
-	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/chatutil"
 )
+
+const UsernameQueryParameter = "username"
 
 // SendPublicMessage
 //
@@ -16,7 +17,7 @@ import (
 // @Tags			messages
 // @Accept			json
 // @Produce		json
-// @Param			text	body	chatutil.TextMessage	true	"Text message object for sending public message"
+// @Param			text	body	request.TextMessage	true	"Text message object for sending public message"
 // @Security		BasicAuth
 // @Success		200	{object}	entities.Message	"Message successfully sent"
 // @Failure		400	{string}	string				"Bad Request: Invalid request body"
@@ -25,7 +26,7 @@ import (
 // @Failure		500	{string}	string				"JSON encoding error"
 // @Router			/messages/public [post]
 func (h *Handler) SendPublicMessage(w http.ResponseWriter, r *http.Request) {
-	var textMessage chatutil.TextMessage
+	var textMessage request.TextMessage
 
 	err := decodeRequestBody(r, &textMessage)
 	if err != nil {
@@ -44,7 +45,7 @@ func (h *Handler) SendPublicMessage(w http.ResponseWriter, r *http.Request) {
 		Content:  textMessage.Content,
 	}
 
-	err = h.serv.SendPublicMessage(msg)
+	err = h.serv.Chat.SendPublicMessage(msg)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -64,7 +65,7 @@ func (h *Handler) SendPublicMessage(w http.ResponseWriter, r *http.Request) {
 //	@Tags			messages
 //	@Accept			json
 //	@Produce		json
-//	@Param			text		body	chatutil.TextMessage	true	"Text message object for sending private message"
+//	@Param			text		body	request.TextMessage	true	"Text message object for sending private message"
 //	@Param			receiver	query	string					true	"Username of the message receiver"
 //	@Security		BasicAuth
 //	@Success		200	{object}	entities.Message	"Message successfully sent"
@@ -74,7 +75,7 @@ func (h *Handler) SendPublicMessage(w http.ResponseWriter, r *http.Request) {
 //	@Failure		500	{string}	string				"JSON encoding error"
 //	@Router			/messages/private [post]
 func (h *Handler) SendPrivateMessage(w http.ResponseWriter, r *http.Request) {
-	var textMessage chatutil.TextMessage
+	var textMessage request.TextMessage
 
 	err := decodeRequestBody(r, &textMessage)
 	if err != nil {
@@ -82,7 +83,7 @@ func (h *Handler) SendPrivateMessage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	receiver := r.URL.Query().Get("receiver")
+	receiver := r.URL.Query().Get(UsernameQueryParameter)
 
 	sender, ok := r.Context().Value(RouteContextUsernameValue).(string)
 	if !ok {
@@ -100,7 +101,7 @@ func (h *Handler) SendPrivateMessage(w http.ResponseWriter, r *http.Request) {
 		Content:  textMessage.Content,
 	}
 
-	err = h.serv.SendPrivateMessage(chat, msg)
+	err = h.serv.Chat.SendPrivateMessage(chat, msg)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -128,19 +129,19 @@ func (h *Handler) SendPrivateMessage(w http.ResponseWriter, r *http.Request) {
 //	@Failure		500	{string}	string				"Bad Request: Get public messages error"
 //	@Router			/messages/public [get]
 func (h *Handler) ShowPublicMessage(w http.ResponseWriter, r *http.Request) {
-	page, err := getPageParams(r)
-	if err != nil || page <= 0 {
-		http.Error(w, "Invalid page number", http.StatusBadRequest)
+	limit, offset, err := getPageParams(r)
+	if err != nil || limit <= 0 || offset <= 0 {
+		http.Error(w, "Invalid page parameters", http.StatusBadRequest)
 		return
 	}
 
-	messages, err := h.serv.GetPublicMessages()
+	messages, err := h.serv.Chat.GetPublicMessages()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	startIndex, endIndex := getPaginationIndexes(page)
+	startIndex, endIndex := getPaginationIndexes(limit, offset)
 
 	pageMessages, err := paginateMessages(messages, startIndex, endIndex)
 	if err != nil {
@@ -171,13 +172,13 @@ func (h *Handler) ShowPublicMessage(w http.ResponseWriter, r *http.Request) {
 //	@Failure		500	{string}	string				"Bad Request: Get private messages error"
 //	@Router			/messages/private [get]
 func (h *Handler) ShowPrivateMessages(w http.ResponseWriter, r *http.Request) {
-	page, err := getPageParams(r)
-	if err != nil || page <= 0 {
-		http.Error(w, "Invalid page number", http.StatusBadRequest)
+	limit, offset, err := getPageParams(r)
+	if err != nil || limit <= 0 || offset <= 0 {
+		http.Error(w, "Invalid page parameters", http.StatusBadRequest)
 		return
 	}
 
-	receiver := r.URL.Query().Get("receiver")
+	receiver := r.URL.Query().Get(UsernameQueryParameter)
 
 	sender, ok := r.Context().Value(RouteContextUsernameValue).(string)
 	if !ok {
@@ -190,13 +191,13 @@ func (h *Handler) ShowPrivateMessages(w http.ResponseWriter, r *http.Request) {
 		User2: sender,
 	}
 
-	messages, err := h.serv.GetPrivateMessages(chat)
+	messages, err := h.serv.Chat.GetPrivateMessages(chat)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	startIndex, endIndex := getPaginationIndexes(page)
+	startIndex, endIndex := getPaginationIndexes(limit, offset)
 
 	pageMessages, err := paginateMessages(messages, startIndex, endIndex)
 	if err != nil {
@@ -231,7 +232,7 @@ func (h *Handler) ShowUsersWithMessages(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	usersList, err := h.serv.GetUsersWithMessage(username)
+	usersList, err := h.serv.Chat.GetUsersWithMessage(username)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
