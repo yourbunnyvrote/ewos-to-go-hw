@@ -68,7 +68,7 @@ func (h *Handler) isUserExists(next http.Handler) http.Handler {
 			Password: password,
 		}
 
-		if _, statusCode, err := h.serv.Auth.GetUser(user); err != nil {
+		if _, statusCode, err := h.auth.serv.GetUser(user); err != nil {
 			http.Error(w, err.Error(), statusCode)
 			return
 		}

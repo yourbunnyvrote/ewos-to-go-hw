@@ -2,12 +2,13 @@ package main
 
 import (
 	"context"
-	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/cmd/api/server"
-	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/database"
 	"log"
 	"os"
 	"os/signal"
 	"syscall"
+
+	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/cmd/api/server"
+	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/database"
 
 	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/cmd/api/handlers"
 	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/repository"

@@ -35,7 +35,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/chatutil.User"
+                            "$ref": "#/definitions/request.User"
                         }
                     }
                 ],
@@ -82,15 +82,22 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "integer",
-                        "description": "Page number for pagination (positive integer)",
-                        "name": "page",
+                        "description": "Limit number for pagination (positive integer)",
+                        "name": "limit",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Start number for pagination (positive integer)",
+                        "name": "offset",
                         "in": "query",
                         "required": true
                     },
                     {
                         "type": "string",
                         "description": "Username of the message receiver",
-                        "name": "receiver",
+                        "name": "username",
                         "in": "query",
                         "required": true
                     }
@@ -101,7 +108,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/chatutil.Message"
+                                "$ref": "#/definitions/entities.Message"
                             }
                         }
                     },
@@ -149,13 +156,13 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/chatutil.TextMessage"
+                            "$ref": "#/definitions/request.TextMessage"
                         }
                     },
                     {
                         "type": "string",
                         "description": "Username of the message receiver",
-                        "name": "receiver",
+                        "name": "username",
                         "in": "query",
                         "required": true
                     }
@@ -164,7 +171,7 @@ const docTemplate = `{
                     "200": {
                         "description": "Message successfully sent",
                         "schema": {
-                            "$ref": "#/definitions/chatutil.Message"
+                            "$ref": "#/definitions/entities.Message"
                         }
                     },
                     "400": {
@@ -209,8 +216,15 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "integer",
-                        "description": "Page number for pagination (positive integer)",
-                        "name": "page",
+                        "description": "Limit number for pagination (positive integer)",
+                        "name": "limit",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Start number for pagination (positive integer)",
+                        "name": "offset",
                         "in": "query",
                         "required": true
                     }
@@ -221,7 +235,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/chatutil.Message"
+                                "$ref": "#/definitions/entities.Message"
                             }
                         }
                     },
@@ -269,7 +283,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/chatutil.TextMessage"
+                            "$ref": "#/definitions/request.TextMessage"
                         }
                     }
                 ],
@@ -277,7 +291,7 @@ const docTemplate = `{
                     "200": {
                         "description": "Message successfully sent",
                         "schema": {
-                            "$ref": "#/definitions/chatutil.Message"
+                            "$ref": "#/definitions/entities.Message"
                         }
                     },
                     "400": {
@@ -370,7 +384,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/chatutil.User"
+                            "$ref": "#/definitions/request.User"
                         }
                     }
                 ],
@@ -398,7 +412,7 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "chatutil.Message": {
+        "entities.Message": {
             "type": "object",
             "properties": {
                 "content": {
@@ -409,7 +423,7 @@ const docTemplate = `{
                 }
             }
         },
-        "chatutil.TextMessage": {
+        "request.TextMessage": {
             "type": "object",
             "properties": {
                 "content": {
@@ -417,7 +431,7 @@ const docTemplate = `{
                 }
             }
         },
-        "chatutil.User": {
+        "request.User": {
             "type": "object",
             "properties": {
                 "password": {

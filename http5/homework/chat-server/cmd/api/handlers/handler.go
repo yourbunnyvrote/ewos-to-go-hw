@@ -8,11 +8,15 @@ import (
 )
 
 type Handler struct {
-	serv *service.Service
+	auth *AuthHandler
+	chat *ChattingHandler
 }
 
 func NewHandler(serv *service.Service) *Handler {
-	return &Handler{serv: serv}
+	return &Handler{
+		auth: NewAuthHandler(serv.Auth),
+		chat: NewChattingHandler(serv.Chat, serv.Chat),
+	}
 }
 
 func (h *Handler) InitRoutes() *chi.Mux {
@@ -22,22 +26,22 @@ func (h *Handler) InitRoutes() *chi.Mux {
 	))
 
 	r.Route("/v1", func(r chi.Router) {
-		r.Post("/register", h.Registration)
-		r.Post("/auth", h.Authentication)
+		r.Post("/register", h.auth.Registration)
+		r.Post("/auth", h.auth.Authentication)
 
 		r.Group(func(r chi.Router) {
 			r.Use(userIdentity)
 			r.Use(h.isUserExists)
-			r.Post("/messages/public", h.SendPublicMessage)
-			r.Get("/messages/public", h.ShowPublicMessage)
+			r.Post("/messages/public", h.chat.public.SendPublicMessage)
+			r.Get("/messages/public", h.chat.public.ShowPublicMessage)
 		})
 
 		r.Group(func(r chi.Router) {
 			r.Use(userIdentity)
 			r.Use(h.isUserExists)
-			r.Post("/messages/private", h.SendPrivateMessage)
-			r.Get("/messages/private", h.ShowPrivateMessages)
-			r.Get("/messages/users", h.ShowUsersWithMessages)
+			r.Post("/messages/private", h.chat.private.SendPrivateMessage)
+			r.Get("/messages/private", h.chat.private.ShowPrivateMessages)
+			r.Get("/messages/users", h.chat.private.ShowUsersWithMessages)
 		})
 	})
 

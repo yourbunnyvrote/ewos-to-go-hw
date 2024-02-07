@@ -7,6 +7,19 @@ import (
 	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/domain/entities"
 )
 
+type AuthService interface {
+	CreateUser(user entities.User) (string, int, error)
+	GetUser(user entities.User) (string, int, error)
+}
+
+type AuthHandler struct {
+	serv AuthService
+}
+
+func NewAuthHandler(serv AuthService) *AuthHandler {
+	return &AuthHandler{serv: serv}
+}
+
 // Registration
 //
 //	@Summary		Register a new user
@@ -20,7 +33,7 @@ import (
 //	@Failure		500		{string}	string			"Create user error"
 //	@Failure		500		{string}	string			"JSON encoding error"
 //	@Router			/register [post]
-func (h *Handler) Registration(w http.ResponseWriter, r *http.Request) {
+func (h *AuthHandler) Registration(w http.ResponseWriter, r *http.Request) {
 	var newUserJSON request.User
 
 	err := decodeRequestBody(r, &newUserJSON)
@@ -31,7 +44,7 @@ func (h *Handler) Registration(w http.ResponseWriter, r *http.Request) {
 
 	newUser := entities.User(newUserJSON)
 
-	response, statusCode, err := h.serv.Auth.CreateUser(newUser)
+	response, statusCode, err := h.serv.CreateUser(newUser)
 	if err != nil {
 		http.Error(w, err.Error(), statusCode)
 		return
@@ -57,7 +70,7 @@ func (h *Handler) Registration(w http.ResponseWriter, r *http.Request) {
 //	@Failure		500		{string}	string			"Authentication error"
 //	@Failure		500		{string}	string			"JSON encoding error"
 //	@Router			/auth [post]
-func (h *Handler) Authentication(w http.ResponseWriter, r *http.Request) {
+func (h *AuthHandler) Authentication(w http.ResponseWriter, r *http.Request) {
 	var existingUserJSON request.User
 
 	err := decodeRequestBody(r, &existingUserJSON)
@@ -68,7 +81,7 @@ func (h *Handler) Authentication(w http.ResponseWriter, r *http.Request) {
 
 	existingUser := entities.User(existingUserJSON)
 
-	response, statusCode, err := h.serv.Auth.GetUser(existingUser)
+	response, statusCode, err := h.serv.GetUser(existingUser)
 	if err != nil {
 		http.Error(w, err.Error(), statusCode)
 		return

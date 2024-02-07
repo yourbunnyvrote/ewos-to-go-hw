@@ -1,18 +1,18 @@
 basePath: /v1
 definitions:
-  chatutil.Message:
+  entities.Message:
     properties:
       content:
         type: string
       username:
         type: string
     type: object
-  chatutil.TextMessage:
+  request.TextMessage:
     properties:
       content:
         type: string
     type: object
-  chatutil.User:
+  request.User:
     properties:
       password:
         type: string
@@ -37,7 +37,7 @@ paths:
         name: user
         required: true
         schema:
-          $ref: '#/definitions/chatutil.User'
+          $ref: '#/definitions/request.User'
       produces:
       - application/json
       responses:
@@ -62,14 +62,19 @@ paths:
       - application/json
       description: Retrieves private chat messages with pagination support
       parameters:
-      - description: Page number for pagination (positive integer)
+      - description: Limit number for pagination (positive integer)
         in: query
-        name: page
+        name: limit
+        required: true
+        type: integer
+      - description: Start number for pagination (positive integer)
+        in: query
+        name: offset
         required: true
         type: integer
       - description: Username of the message receiver
         in: query
-        name: receiver
+        name: username
         required: true
         type: string
       produces:
@@ -79,7 +84,7 @@ paths:
           description: List of private messages
           schema:
             items:
-              $ref: '#/definitions/chatutil.Message'
+              $ref: '#/definitions/entities.Message'
             type: array
         "400":
           description: 'Bad Request: Invalid page number or missing receiver'
@@ -108,10 +113,10 @@ paths:
         name: text
         required: true
         schema:
-          $ref: '#/definitions/chatutil.TextMessage'
+          $ref: '#/definitions/request.TextMessage'
       - description: Username of the message receiver
         in: query
-        name: receiver
+        name: username
         required: true
         type: string
       produces:
@@ -120,7 +125,7 @@ paths:
         "200":
           description: Message successfully sent
           schema:
-            $ref: '#/definitions/chatutil.Message'
+            $ref: '#/definitions/entities.Message'
         "400":
           description: 'Bad Request: Invalid request body or missing receiver'
           schema:
@@ -144,9 +149,14 @@ paths:
       - application/json
       description: Retrieves public chat messages with pagination support
       parameters:
-      - description: Page number for pagination (positive integer)
+      - description: Limit number for pagination (positive integer)
         in: query
-        name: page
+        name: limit
+        required: true
+        type: integer
+      - description: Start number for pagination (positive integer)
+        in: query
+        name: offset
         required: true
         type: integer
       produces:
@@ -156,7 +166,7 @@ paths:
           description: List of public messages
           schema:
             items:
-              $ref: '#/definitions/chatutil.Message'
+              $ref: '#/definitions/entities.Message'
             type: array
         "400":
           description: 'Bad Request: Invalid page number'
@@ -185,14 +195,14 @@ paths:
         name: text
         required: true
         schema:
-          $ref: '#/definitions/chatutil.TextMessage'
+          $ref: '#/definitions/request.TextMessage'
       produces:
       - application/json
       responses:
         "200":
           description: Message successfully sent
           schema:
-            $ref: '#/definitions/chatutil.Message'
+            $ref: '#/definitions/entities.Message'
         "400":
           description: 'Bad Request: Invalid request body'
           schema:
@@ -253,7 +263,7 @@ paths:
         name: user
         required: true
         schema:
-          $ref: '#/definitions/chatutil.User'
+          $ref: '#/definitions/request.User'
       produces:
       - application/json
       responses:

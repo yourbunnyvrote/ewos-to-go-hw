@@ -27,16 +27,16 @@ func sendResponse(w http.ResponseWriter, status int, response interface{}) error
 	return json.NewEncoder(w).Encode(response)
 }
 
-func getPageParams(r *http.Request) (int, int, error) {
+func getPageParams(r *http.Request) (limit int, offset int, err error) {
 	limitStr := r.URL.Query().Get(LimitQueryParameter)
 
-	limit, err := strconv.Atoi(limitStr)
+	limit, err = strconv.Atoi(limitStr)
 	if err != nil {
 		return 0, 0, err
 	}
 
 	offsetStr := r.URL.Query().Get(OffsetQueryParameter)
-	offset, err := strconv.Atoi(offsetStr)
+	offset, err = strconv.Atoi(offsetStr)
 
 	return limit, offset, err
 }
