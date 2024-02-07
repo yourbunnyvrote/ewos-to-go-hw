@@ -7,6 +7,8 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/database"
+
 	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/cmd/api/handlers"
 	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/chatutil"
 	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/repository"
@@ -24,12 +26,8 @@ import (
 // @in							header
 // @name						Authorization
 func main() {
-	db := chatutil.ChatDB{
-		Users:        map[string]chatutil.User{},
-		PublicChat:   []chatutil.Message{},
-		PrivateChats: map[chatutil.Chat][]chatutil.Message{},
-	}
-	repos := repository.NewRepository(&db)
+	db := database.NewChatDB()
+	repos := repository.NewRepository(db)
 	services := service.NewService(repos)
 	handler := handlers.NewHandler(services)
 

@@ -3,7 +3,8 @@ package handlers
 import (
 	"net/http"
 
-	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/chatutil"
+	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/api/request"
+	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/domain/entities"
 )
 
 // Registration
@@ -20,13 +21,15 @@ import (
 //	@Failure		500		{string}	string			"JSON encoding error"
 //	@Router			/register [post]
 func (h *Handler) Registration(w http.ResponseWriter, r *http.Request) {
-	var newUser chatutil.User
+	var newUserJSON request.User
 
-	err := decodeRequestBody(r, &newUser)
+	err := decodeRequestBody(r, &newUserJSON)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
+
+	newUser := entities.User(newUserJSON)
 
 	response, statusCode, err := h.serv.CreateUser(newUser)
 	if err != nil {
@@ -55,13 +58,15 @@ func (h *Handler) Registration(w http.ResponseWriter, r *http.Request) {
 //	@Failure		500		{string}	string			"JSON encoding error"
 //	@Router			/auth [post]
 func (h *Handler) Authentication(w http.ResponseWriter, r *http.Request) {
-	var existingUser chatutil.User
+	var existingUserJSON request.User
 
-	err := decodeRequestBody(r, &existingUser)
+	err := decodeRequestBody(r, &existingUserJSON)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
+
+	existingUser := entities.User(existingUserJSON)
 
 	response, statusCode, err := h.serv.GetUser(existingUser)
 	if err != nil {

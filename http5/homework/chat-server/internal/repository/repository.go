@@ -1,30 +1,31 @@
 package repository
 
 import (
-	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/chatutil"
+	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/database"
+	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/domain/entities"
 )
 
-type Authorization interface {
-	CreateUser(user chatutil.User) (string, int, error)
-	GetUser(user chatutil.User) (chatutil.User, int, error)
+type InMemoryDB interface {
+	Insert(key string, value interface{})
+	Get(key string) interface{}
 }
 
 type Chatting interface {
-	SendPublicMessage(msg chatutil.Message) error
-	SendPrivateMessage(chat chatutil.Chat, msg chatutil.Message) error
-	GetPublicMessages() ([]chatutil.Message, error)
-	GetPrivateMessages(chat chatutil.Chat) ([]chatutil.Message, error)
+	SendPublicMessage(msg entities.Message) error
+	SendPrivateMessage(chat database.Chat, msg entities.Message) error
+	GetPublicMessages() ([]entities.Message, error)
+	GetPrivateMessages(chat database.Chat) ([]entities.Message, error)
 	GetUsersWithMessage(receiver string) ([]string, error)
 }
 
 type Repository struct {
-	Authorization
-	Chatting
+	Auth Authorization
+	Chat Chatting
 }
 
-func NewRepository(db *chatutil.ChatDB) *Repository {
+func NewRepository(db InMemoryDB) *Repository {
 	return &Repository{
-		Authorization: NewAuthDB(db),
-		Chatting:      NewChatsDB(db),
+		Auth: NewAuthDB(db),
+		Chat: NewChatsDB(db),
 	}
 }

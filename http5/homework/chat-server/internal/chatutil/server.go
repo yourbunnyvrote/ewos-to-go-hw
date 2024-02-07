@@ -12,16 +12,6 @@ const (
 	writeTimeout   = 10 * time.Second
 )
 
-type User struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
-}
-
-type Message struct {
-	Username string `json:"username"`
-	Content  string `json:"content"`
-}
-
 type TextMessage struct {
 	Content string `json:"content"`
 }

@@ -3,6 +3,9 @@ package handlers
 import (
 	"net/http"
 
+	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/database"
+	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/domain/entities"
+
 	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/chatutil"
 )
 
@@ -15,7 +18,7 @@ import (
 // @Produce		json
 // @Param			text	body	chatutil.TextMessage	true	"Text message object for sending public message"
 // @Security		BasicAuth
-// @Success		200	{object}	chatutil.Message	"Message successfully sent"
+// @Success		200	{object}	entities.Message	"Message successfully sent"
 // @Failure		400	{string}	string				"Bad Request: Invalid request body"
 // @Failure		401	{string}	string				"Unauthorized: Missing or invalid API key"
 // @Failure		500	{string}	string				"Bad Request: Send public message error"
@@ -36,7 +39,7 @@ func (h *Handler) SendPublicMessage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	msg := chatutil.Message{
+	msg := entities.Message{
 		Username: username,
 		Content:  textMessage.Content,
 	}
@@ -64,7 +67,7 @@ func (h *Handler) SendPublicMessage(w http.ResponseWriter, r *http.Request) {
 //	@Param			text		body	chatutil.TextMessage	true	"Text message object for sending private message"
 //	@Param			receiver	query	string					true	"Username of the message receiver"
 //	@Security		BasicAuth
-//	@Success		200	{object}	chatutil.Message	"Message successfully sent"
+//	@Success		200	{object}	entities.Message	"Message successfully sent"
 //	@Failure		400	{string}	string				"Bad Request: Invalid request body or missing receiver"
 //	@Failure		401	{string}	string				"Unauthorized: Missing or invalid API key"
 //	@Failure		500	{string}	string				"Bad Request: Send private message error"
@@ -87,12 +90,12 @@ func (h *Handler) SendPrivateMessage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	chat := chatutil.Chat{
+	chat := database.Chat{
 		User1: receiver,
 		User2: sender,
 	}
 
-	msg := chatutil.Message{
+	msg := entities.Message{
 		Username: sender,
 		Content:  textMessage.Content,
 	}
@@ -119,7 +122,7 @@ func (h *Handler) SendPrivateMessage(w http.ResponseWriter, r *http.Request) {
 //	@Produce		json
 //	@Param			page	query	integer	true	"Page number for pagination (positive integer)"
 //	@Security		BasicAuth
-//	@Success		200	{object}	[]chatutil.Message	"List of public messages"
+//	@Success		200	{object}	[]entities.Message	"List of public messages"
 //	@Failure		400	{string}	string				"Bad Request: Invalid page number"
 //	@Failure		401	{string}	string				"Unauthorized: Missing or invalid API key"
 //	@Failure		500	{string}	string				"Bad Request: Get public messages error"
@@ -162,7 +165,7 @@ func (h *Handler) ShowPublicMessage(w http.ResponseWriter, r *http.Request) {
 //	@Param			page		query	integer	true	"Page number for pagination (positive integer)"
 //	@Param			receiver	query	string	true	"Username of the message receiver"
 //	@Security		BasicAuth
-//	@Success		200	{object}	[]chatutil.Message	"List of private messages"
+//	@Success		200	{object}	[]entities.Message	"List of private messages"
 //	@Failure		400	{string}	string				"Bad Request: Invalid page number or missing receiver"
 //	@Failure		401	{string}	string				"Unauthorized: Missing or invalid API key"
 //	@Failure		500	{string}	string				"Bad Request: Get private messages error"
@@ -182,7 +185,7 @@ func (h *Handler) ShowPrivateMessages(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	chat := chatutil.Chat{
+	chat := database.Chat{
 		User1: receiver,
 		User2: sender,
 	}

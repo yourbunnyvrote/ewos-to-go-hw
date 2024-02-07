@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/chatutil"
+	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/domain/entities"
 )
 
 const (
@@ -63,7 +63,7 @@ func (h *Handler) isUserExists(next http.Handler) http.Handler {
 			return
 		}
 
-		user := chatutil.User{
+		user := entities.User{
 			Username: username,
 			Password: password,
 		}

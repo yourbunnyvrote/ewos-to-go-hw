@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/chatutil"
+	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/domain/entities"
 )
 
 const (
@@ -41,7 +41,7 @@ func getPaginationIndexes(page int) (startIndex, endIndex int) {
 	return startIndex, endIndex
 }
 
-func paginateMessages(messages []chatutil.Message, startIndex, endIndex int) ([]chatutil.Message, error) {
+func paginateMessages(messages []entities.Message, startIndex, endIndex int) ([]entities.Message, error) {
 	if startIndex >= len(messages) {
 		return nil, ErrEndOfPages
 	}

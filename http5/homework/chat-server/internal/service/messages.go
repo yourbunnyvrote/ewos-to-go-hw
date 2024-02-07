@@ -3,7 +3,9 @@ package service
 import (
 	"errors"
 
-	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/chatutil"
+	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/database"
+	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/domain/entities"
+
 	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/repository"
 )
 
@@ -17,7 +19,7 @@ func NewChatService(repos repository.Chatting) *ChatService {
 	return &ChatService{repos: repos}
 }
 
-func (cs *ChatService) SendPublicMessage(msg chatutil.Message) error {
+func (cs *ChatService) SendPublicMessage(msg entities.Message) error {
 	if msg.Content == "" {
 		return ErrMsgEmpty
 	}
@@ -25,7 +27,7 @@ func (cs *ChatService) SendPublicMessage(msg chatutil.Message) error {
 	return cs.repos.SendPublicMessage(msg)
 }
 
-func (cs *ChatService) SendPrivateMessage(chat chatutil.Chat, msg chatutil.Message) error {
+func (cs *ChatService) SendPrivateMessage(chat database.Chat, msg entities.Message) error {
 	if msg.Content == "" {
 		return ErrMsgEmpty
 	}
@@ -37,11 +39,11 @@ func (cs *ChatService) SendPrivateMessage(chat chatutil.Chat, msg chatutil.Messa
 	return cs.repos.SendPrivateMessage(chat, msg)
 }
 
-func (cs *ChatService) GetPublicMessages() ([]chatutil.Message, error) {
+func (cs *ChatService) GetPublicMessages() ([]entities.Message, error) {
 	return cs.repos.GetPublicMessages()
 }
 
-func (cs *ChatService) GetPrivateMessages(chat chatutil.Chat) ([]chatutil.Message, error) {
+func (cs *ChatService) GetPrivateMessages(chat database.Chat) ([]entities.Message, error) {
 	if chat.User1 < chat.User2 {
 		chat.User1, chat.User2 = chat.User2, chat.User1
 	}

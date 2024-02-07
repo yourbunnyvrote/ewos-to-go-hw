@@ -4,7 +4,8 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/chatutil"
+	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/domain/entities"
+
 	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/repository"
 )
 
@@ -21,7 +22,7 @@ func NewAuthService(repos repository.Authorization) *AuthService {
 	return &AuthService{repos: repos}
 }
 
-func (as *AuthService) CreateUser(user chatutil.User) (string, int, error) {
+func (as *AuthService) CreateUser(user entities.User) (string, int, error) {
 	if user.Username == "" || user.Password == "" {
 		return "", http.StatusBadRequest, ErrEmptyCredentials
 	}
@@ -29,7 +30,7 @@ func (as *AuthService) CreateUser(user chatutil.User) (string, int, error) {
 	return as.repos.CreateUser(user)
 }
 
-func (as *AuthService) GetUser(user chatutil.User) (string, int, error) {
+func (as *AuthService) GetUser(user entities.User) (string, int, error) {
 	if user.Username == "" || user.Password == "" {
 		return "", http.StatusBadRequest, ErrEmptyCredentials
 	}
