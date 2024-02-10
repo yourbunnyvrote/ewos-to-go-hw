@@ -11,15 +11,15 @@ type InMemoryDB interface {
 }
 
 type Authorization interface {
-	CreateUser(user entities.User) (string, int, error)
-	GetUser(user entities.User) (entities.User, int, error)
+	CreateUser(user entities.User) (string, error)
+	GetUser(username string) (entities.User, error)
 }
 
 type Chatting interface {
 	SendPublicMessage(msg entities.Message) error
-	SendPrivateMessage(chat database.Chat, msg entities.Message) error
+	SendPrivateMessage(chat entities.Chat, msg entities.Message) error
 	GetPublicMessages() ([]entities.Message, error)
-	GetPrivateMessages(chat database.Chat) ([]entities.Message, error)
+	GetPrivateMessages(chat entities.Chat) ([]entities.Message, error)
 	GetUsersWithMessage(receiver string) ([]string, error)
 }
 

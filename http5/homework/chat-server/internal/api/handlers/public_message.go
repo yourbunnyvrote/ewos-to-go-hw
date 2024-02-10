@@ -1,6 +1,10 @@
 package handlers
 
 import (
+	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/pkg/apiutils"
+	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/pkg/constants"
+	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/pkg/httputils/baseresponse"
+	"github.com/go-chi/chi"
 	"net/http"
 
 	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/api/request"
@@ -18,6 +22,16 @@ type PublicChatHandler struct {
 
 func NewPublicChatHandler(serv PublicChatting) *PublicChatHandler {
 	return &PublicChatHandler{serv: serv}
+}
+
+func (h *PublicChatHandler) Routes() chi.Router {
+	r := chi.NewRouter()
+
+	r.Use(UserIdentity)
+	r.Post("/", h.SendPublicMessage)
+	r.Get("/", h.ShowPublicMessage)
+
+	return r
 }
 
 // SendPublicMessage
@@ -38,13 +52,13 @@ func NewPublicChatHandler(serv PublicChatting) *PublicChatHandler {
 func (h *PublicChatHandler) SendPublicMessage(w http.ResponseWriter, r *http.Request) {
 	var textMessage request.TextMessage
 
-	err := decodeRequestBody(r, &textMessage)
+	err := apiutils.DecodeRequestBody(r, &textMessage)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	username, ok := r.Context().Value(RouteContextUsernameValue).(string)
+	username, ok := r.Context().Value(constants.RouteContextUsernameValue).(string)
 	if !ok {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -61,9 +75,9 @@ func (h *PublicChatHandler) SendPublicMessage(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	err = sendResponse(w, http.StatusOK, msg)
+	err = apiutils.SendResponse(w, http.StatusOK, msg)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		baseresponse.RenderErr(w, r, err)
 		return
 	}
 }
@@ -90,15 +104,17 @@ func (h *PublicChatHandler) ShowPublicMessage(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	pageMessages, err := paginateMessages(r, messages)
+	limit, offset, err := GetPaginateParameters(w, r)
+
+	pageMessages, err := PaginateMessages(messages, limit, offset)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	err = sendResponse(w, http.StatusOK, pageMessages)
+	err = apiutils.SendResponse(w, http.StatusOK, pageMessages)
 	if err != nil {
-		http.Error(w, "JSON encoding error", http.StatusInternalServerError)
+		baseresponse.RenderErr(w, r, err)
 		return
 	}
 }
