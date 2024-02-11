@@ -19,10 +19,5 @@ func (as *AuthService) CreateUser(user entities.User) (string, error) {
 }
 
 func (as *AuthService) GetUser(username string) (entities.User, error) {
-	user, err := as.repos.GetUser(username)
-	if err != nil {
-		return entities.User{}, err
-	}
-
-	return user, nil
+	return as.repos.GetUser(username)
 }

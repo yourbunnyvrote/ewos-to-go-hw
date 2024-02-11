@@ -3,12 +3,24 @@ package handlers
 import (
 	"context"
 	"encoding/base64"
+	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/api/mapper"
 	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/pkg/constants"
+	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/pkg/httputils/baseresponse"
 	"net/http"
 	"strings"
 )
 
-func UserIdentity(next http.Handler) http.Handler {
+type UserIdentity struct {
+	service AuthService
+}
+
+func NewUserIdentity(service AuthService) *UserIdentity {
+	return &UserIdentity{
+		service: service,
+	}
+}
+
+func (h *UserIdentity) Identify(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		authHeader := r.Header.Get("Authorization")
 		if authHeader == "" {
@@ -34,8 +46,22 @@ func UserIdentity(next http.Handler) http.Handler {
 			return
 		}
 
-		ctx := context.WithValue(r.Context(), constants.RouteContextUsernameValue, authCredentials[0])
-		ctx = context.WithValue(ctx, constants.RouteContextPasswordValue, authCredentials[1])
+		username, password := authCredentials[0], authCredentials[1]
+		user1 := mapper.MakeUser(username, password)
+
+		user2, err := h.service.GetUser(username)
+		if err != nil {
+			baseresponse.RenderErr(w, r, err)
+			return
+		}
+
+		if user1 != user2 {
+			baseresponse.RenderErr(w, r, constants.ErrBadRequest)
+			return
+		}
+
+		ctx := context.WithValue(r.Context(), constants.RouteContextUsernameValue, username)
+		ctx = context.WithValue(ctx, constants.RouteContextPasswordValue, password)
 		r = r.WithContext(ctx)
 
 		next.ServeHTTP(w, r)

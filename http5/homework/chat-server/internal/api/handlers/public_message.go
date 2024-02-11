@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/api/mapper"
 	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/pkg/apiutils"
 	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/pkg/constants"
 	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/pkg/httputils/baseresponse"
@@ -17,17 +18,21 @@ type PublicChatting interface {
 }
 
 type PublicChatHandler struct {
-	serv PublicChatting
+	service      PublicChatting
+	userIdentity *UserIdentity
 }
 
-func NewPublicChatHandler(serv PublicChatting) *PublicChatHandler {
-	return &PublicChatHandler{serv: serv}
+func NewPublicChatHandler(service PublicChatting, userIdentity *UserIdentity) *PublicChatHandler {
+	return &PublicChatHandler{
+		service:      service,
+		userIdentity: userIdentity,
+	}
 }
 
 func (h *PublicChatHandler) Routes() chi.Router {
 	r := chi.NewRouter()
 
-	r.Use(UserIdentity)
+	r.Use(h.userIdentity.Identify)
 	r.Post("/", h.SendPublicMessage)
 	r.Get("/", h.ShowPublicMessage)
 
@@ -54,24 +59,21 @@ func (h *PublicChatHandler) SendPublicMessage(w http.ResponseWriter, r *http.Req
 
 	err := apiutils.DecodeRequestBody(r, &textMessage)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		baseresponse.RenderErr(w, r, err)
 		return
 	}
 
 	username, ok := r.Context().Value(constants.RouteContextUsernameValue).(string)
 	if !ok {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		baseresponse.RenderErr(w, r, err)
 		return
 	}
 
-	msg := entities.Message{
-		Username: username,
-		Content:  textMessage.Content,
-	}
+	msg := mapper.MakeMessage(username, textMessage.Content)
 
-	err = h.serv.SendPublicMessage(msg)
+	err = h.service.SendPublicMessage(msg)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		baseresponse.RenderErr(w, r, err)
 		return
 	}
 
@@ -98,17 +100,21 @@ func (h *PublicChatHandler) SendPublicMessage(w http.ResponseWriter, r *http.Req
 //	@Failure		500	{string}	string				"Bad Request: Get public messages error"
 //	@Router			/messages/public [get]
 func (h *PublicChatHandler) ShowPublicMessage(w http.ResponseWriter, r *http.Request) {
-	messages, err := h.serv.GetPublicMessages()
+	messages, err := h.service.GetPublicMessages()
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		baseresponse.RenderErr(w, r, err)
 		return
 	}
 
 	limit, offset, err := GetPaginateParameters(w, r)
+	if err != nil {
+		baseresponse.RenderErr(w, r, err)
+		return
+	}
 
 	pageMessages, err := PaginateMessages(messages, limit, offset)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		baseresponse.RenderErr(w, r, err)
 		return
 	}
 

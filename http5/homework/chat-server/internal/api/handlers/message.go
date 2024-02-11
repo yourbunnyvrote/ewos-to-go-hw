@@ -27,16 +27,18 @@ func GetPaginateParameters(w http.ResponseWriter, r *http.Request) (int, int, er
 
 	limit, err := strconv.Atoi(limitStr)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
 		return 0, 0, err
 	}
 
 	offsetStr := r.URL.Query().Get(constants.OffsetQueryParameter)
 
 	offset, err := strconv.Atoi(offsetStr)
-	if err != nil || limit <= 0 || offset <= 0 {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+	if err != nil {
 		return 0, 0, err
+	}
+
+	if limit <= 0 || offset <= 0 {
+		return 0, 0, constants.ErrBadRequest
 	}
 
 	return limit, offset, nil

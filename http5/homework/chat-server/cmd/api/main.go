@@ -29,15 +29,17 @@ import (
 // @in							header
 // @name						Authorization
 func main() {
-	db := database.NewChatDB()
+	chatDB := database.NewChatDB()
 
-	repos := repository.NewRepository(db)
+	chatRepo := repository.NewRepository(chatDB)
 
-	services := service.NewService(repos)
+	chatService := service.NewService(chatRepo)
 
-	authHandler := handlers.NewAuthHandler(services.Auth)
-	publicChatHandler := handlers.NewPublicChatHandler(services.Chat)
-	privateChatHandler := handlers.NewPrivateChatHandler(services.Chat)
+	userIdentity := handlers.NewUserIdentity(chatService.Auth)
+
+	authHandler := handlers.NewAuthHandler(chatService.Auth)
+	publicChatHandler := handlers.NewPublicChatHandler(chatService.Chat, userIdentity)
+	privateChatHandler := handlers.NewPrivateChatHandler(chatService.Chat, userIdentity)
 
 	routers := map[string]chi.Router{
 		"/auth":             authHandler.Routes(),

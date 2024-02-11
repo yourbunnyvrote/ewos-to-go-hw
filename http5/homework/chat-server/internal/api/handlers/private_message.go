@@ -18,17 +18,21 @@ type PrivateChatting interface {
 }
 
 type PrivateChatHandler struct {
-	serv PrivateChatting
+	service      PrivateChatting
+	userIdentity *UserIdentity
 }
 
-func NewPrivateChatHandler(serv PrivateChatting) *PrivateChatHandler {
-	return &PrivateChatHandler{serv: serv}
+func NewPrivateChatHandler(service PrivateChatting, userIdentity *UserIdentity) *PrivateChatHandler {
+	return &PrivateChatHandler{
+		service:      service,
+		userIdentity: userIdentity,
+	}
 }
 
 func (h *PrivateChatHandler) Routes() chi.Router {
 	r := chi.NewRouter()
 
-	r.Use(UserIdentity)
+	r.Use(h.userIdentity.Identify)
 	r.Post("/", h.SendPrivateMessage)
 	r.Get("/", h.ShowPrivateMessages)
 	r.Get("/users", h.ShowUsersWithMessages)
@@ -57,7 +61,7 @@ func (h *PrivateChatHandler) SendPrivateMessage(w http.ResponseWriter, r *http.R
 
 	err := apiutils.DecodeRequestBody(r, &textMessage)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		baseresponse.RenderErr(w, r, err)
 		return
 	}
 
@@ -65,7 +69,7 @@ func (h *PrivateChatHandler) SendPrivateMessage(w http.ResponseWriter, r *http.R
 
 	sender, ok := r.Context().Value(constants.RouteContextUsernameValue).(string)
 	if !ok {
-		http.Error(w, "Failed to get username from context", http.StatusInternalServerError)
+		baseresponse.RenderErr(w, r, err)
 		return
 	}
 
@@ -73,9 +77,9 @@ func (h *PrivateChatHandler) SendPrivateMessage(w http.ResponseWriter, r *http.R
 
 	msg := mapper.MakeMessage(sender, textMessage.Content)
 
-	err = h.serv.SendPrivateMessage(chat, msg)
+	err = h.service.SendPrivateMessage(chat, msg)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		baseresponse.RenderErr(w, r, err)
 		return
 	}
 
@@ -107,27 +111,27 @@ func (h *PrivateChatHandler) ShowPrivateMessages(w http.ResponseWriter, r *http.
 
 	sender, ok := r.Context().Value(constants.RouteContextUsernameValue).(string)
 	if !ok {
-		http.Error(w, "Failed to get username from context", http.StatusInternalServerError)
+		baseresponse.RenderErr(w, r, constants.ErrBadRequest)
 		return
 	}
 
 	chat := mapper.MakeChat(receiver, sender)
 
-	messages, err := h.serv.GetPrivateMessages(chat)
+	messages, err := h.service.GetPrivateMessages(chat)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		baseresponse.RenderErr(w, r, err)
 		return
 	}
 
 	limit, offset, err := GetPaginateParameters(w, r)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		baseresponse.RenderErr(w, r, err)
 		return
 	}
 
 	pageMessages, err := PaginateMessages(messages, limit, offset)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		baseresponse.RenderErr(w, r, err)
 		return
 	}
 
@@ -158,9 +162,9 @@ func (h *PrivateChatHandler) ShowUsersWithMessages(w http.ResponseWriter, r *htt
 		return
 	}
 
-	usersList, err := h.serv.GetUsersWithMessage(username)
+	usersList, err := h.service.GetUsersWithMessage(username)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		baseresponse.RenderErr(w, r, err)
 		return
 	}
 

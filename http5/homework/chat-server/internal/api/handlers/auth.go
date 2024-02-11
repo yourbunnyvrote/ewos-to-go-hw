@@ -31,7 +31,6 @@ func (h *AuthHandler) Routes() chi.Router {
 
 	r.Post("/sign-up", h.Registration)
 	r.Post("/sign-in", h.Authentication)
-	r.With(UserIdentity)
 
 	return r
 }
@@ -61,7 +60,7 @@ func (h *AuthHandler) Registration(w http.ResponseWriter, r *http.Request) {
 
 	response, err := h.service.CreateUser(newUser)
 	if err != nil {
-		baseresponse.RenderErr(w, r, err)
+		baseresponse.RenderErr(w, r, fmt.Errorf("%w: %s", constants.ErrBadRequest, err))
 		return
 	}
 
@@ -89,7 +88,7 @@ func (h *AuthHandler) Authentication(w http.ResponseWriter, r *http.Request) {
 
 	err := apiutils.DecodeRequestBody(r, &user)
 	if err != nil {
-		baseresponse.RenderErr(w, r, fmt.Errorf("%w: %s", constants.ErrBadRequest, err))
+		baseresponse.RenderErr(w, r, err)
 		return
 	}
 
