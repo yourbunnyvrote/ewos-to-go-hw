@@ -2,12 +2,13 @@ package handlers
 
 import (
 	"fmt"
+	"net/http"
+
 	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/api/mapper"
 	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/pkg/apiutils"
 	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/pkg/constants"
 	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/pkg/httputils/baseresponse"
 	"github.com/go-chi/chi"
-	"net/http"
 
 	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/api/models/request"
 	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/domain/entities"
@@ -41,6 +42,7 @@ func (h *PublicChatHandler) Routes() chi.Router {
 }
 
 // SendPublicMessage
+//
 //	@Summary		Send a public chat message
 //	@Description	Sends a public chat message using the provided text content
 //	@Tags			messages
@@ -85,6 +87,7 @@ func (h *PublicChatHandler) SendPublicMessage(w http.ResponseWriter, r *http.Req
 }
 
 // ShowPublicMessage
+//
 //	@Summary		Get public chat messages
 //	@Description	Retrieves public chat messages with pagination support
 //	@Tags			messages
@@ -105,7 +108,7 @@ func (h *PublicChatHandler) ShowPublicMessage(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	limit, offset, err := GetPaginateParameters(w, r)
+	limit, offset, err := GetPaginateParameters(r)
 	if err != nil {
 		baseresponse.RenderErr(w, r, fmt.Errorf("%w: %s", constants.ErrBadRequest, err))
 		return

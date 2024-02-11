@@ -19,6 +19,8 @@ func (db *ChatDB) AddPublicMessage(msg entities.Message) error {
 
 	messages = append(messages, msg)
 
+	db.Insert("public chats", messages)
+
 	return nil
 }
 

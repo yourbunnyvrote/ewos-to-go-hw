@@ -2,8 +2,9 @@ package apiutils
 
 import (
 	"encoding/json"
-	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/pkg/constants"
 	"net/http"
+
+	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/pkg/constants"
 )
 
 type SuccessResponse struct {

@@ -2,9 +2,10 @@ package baseresponse
 
 import (
 	"errors"
+	"net/http"
+
 	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/pkg/constants"
 	"github.com/go-chi/render"
-	"net/http"
 )
 
 type ErrResponse struct {
@@ -22,6 +23,7 @@ func NewErrResponse(err error, statusCode int) render.Renderer {
 	}
 }
 
+// nolint:revive
 func (e *ErrResponse) Render(w http.ResponseWriter, r *http.Request) error {
 	render.Status(r, e.HTTPStatusCode)
 	return nil
@@ -60,5 +62,6 @@ func RenderErr(w http.ResponseWriter, r *http.Request, err error) {
 		respErr = ErrUnknown(err)
 	}
 
+	// nolint:errcheck
 	_ = render.Render(w, r, respErr)
 }

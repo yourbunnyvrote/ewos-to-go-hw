@@ -2,12 +2,13 @@ package handlers
 
 import (
 	"fmt"
+	"net/http"
+
 	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/api/mapper"
 	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/pkg/apiutils"
 	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/pkg/constants"
 	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/pkg/httputils/baseresponse"
 	"github.com/go-chi/chi"
-	"net/http"
 
 	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/api/models/request"
 	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/domain/entities"
@@ -36,6 +37,7 @@ func (h *AuthHandler) Routes() chi.Router {
 }
 
 // Registration
+//
 //	@Summary		Register a new user
 //	@Description	Creates a new user account based on the provided user data
 //	@Tags			auth
@@ -72,6 +74,7 @@ func (h *AuthHandler) Registration(w http.ResponseWriter, r *http.Request) {
 }
 
 // Authentication
+//
 //	@Summary		Authenticate a user
 //	@Description	Authenticates an existing user based on the provided credentials
 //	@Tags			auth

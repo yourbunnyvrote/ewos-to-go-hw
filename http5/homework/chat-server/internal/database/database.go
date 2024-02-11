@@ -1,8 +1,9 @@
 package database
 
 import (
-	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/domain/entities"
 	"sync"
+
+	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/domain/entities"
 )
 
 type ChatDB struct {
@@ -39,5 +40,6 @@ func (db *ChatDB) Get(key string) interface{} {
 	db.mu.RLock()
 	data := db.data[key]
 	db.mu.RUnlock()
+
 	return data
 }

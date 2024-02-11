@@ -1,10 +1,11 @@
 package handlers
 
 import (
-	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/domain/entities"
-	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/pkg/constants"
 	"net/http"
 	"strconv"
+
+	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/domain/entities"
+	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/pkg/constants"
 )
 
 func PaginateMessages(messages []entities.Message, limit int, offset int) []entities.Message {
@@ -18,17 +19,17 @@ func PaginateMessages(messages []entities.Message, limit int, offset int) []enti
 	return messages[startIndex:endIndex]
 }
 
-func GetPaginateParameters(w http.ResponseWriter, r *http.Request) (int, int, error) {
+func GetPaginateParameters(r *http.Request) (limit int, offset int, err error) {
 	limitStr := r.URL.Query().Get(constants.LimitQueryParameter)
 
-	limit, err := strconv.Atoi(limitStr)
+	limit, err = strconv.Atoi(limitStr)
 	if err != nil {
 		return 0, 0, constants.ErrPaginateParameters
 	}
 
 	offsetStr := r.URL.Query().Get(constants.OffsetQueryParameter)
 
-	offset, err := strconv.Atoi(offsetStr)
+	offset, err = strconv.Atoi(offsetStr)
 	if err != nil {
 		return 0, 0, constants.ErrPaginateParameters
 	}

@@ -2,6 +2,8 @@ package handlers
 
 import (
 	"fmt"
+	"net/http"
+
 	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/api/mapper"
 	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/api/models/request"
 	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/domain/entities"
@@ -9,7 +11,6 @@ import (
 	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/pkg/constants"
 	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/pkg/httputils/baseresponse"
 	"github.com/go-chi/chi"
-	"net/http"
 )
 
 type PrivateChatting interface {
@@ -42,6 +43,7 @@ func (h *PrivateChatHandler) Routes() chi.Router {
 }
 
 // SendPrivateMessage
+//
 //	@Summary		Send a private chat message
 //	@Description	Sends a private chat message to a specific user
 //	@Tags			messages
@@ -92,6 +94,7 @@ func (h *PrivateChatHandler) SendPrivateMessage(w http.ResponseWriter, r *http.R
 }
 
 // ShowPrivateMessages
+//
 //	@Summary		Get private chat messages
 //	@Description	Retrieves private chat messages with pagination support
 //	@Tags			messages
@@ -126,7 +129,7 @@ func (h *PrivateChatHandler) ShowPrivateMessages(w http.ResponseWriter, r *http.
 		return
 	}
 
-	limit, offset, err := GetPaginateParameters(w, r)
+	limit, offset, err := GetPaginateParameters(r)
 	if err != nil {
 		baseresponse.RenderErr(w, r, fmt.Errorf("%w: %s", constants.ErrBadRequest, err))
 		return
@@ -142,6 +145,7 @@ func (h *PrivateChatHandler) ShowPrivateMessages(w http.ResponseWriter, r *http.
 }
 
 // ShowUsersWithMessages
+//
 //	@Summary		Get users with received private messages
 //	@Description	Retrieves a list of users who have sent private messages to the authenticated user
 //	@Tags			messages

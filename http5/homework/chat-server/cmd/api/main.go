@@ -2,15 +2,16 @@ package main
 
 import (
 	"context"
+	"log"
+	"os"
+	"os/signal"
+	"syscall"
+
 	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/api/handlers"
 	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/pkg/api"
 	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/pkg/httputils/server"
 	"github.com/go-chi/chi"
 	httpSwagger "github.com/swaggo/http-swagger"
-	"log"
-	"os"
-	"os/signal"
-	"syscall"
 
 	_ "github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/docs"
 	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/database"
