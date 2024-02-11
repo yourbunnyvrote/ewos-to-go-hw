@@ -16,6 +16,10 @@ func PaginateMessages(messages []entities.Message, limit int, offset int) []enti
 		endIndex = len(messages)
 	}
 
+	if startIndex > len(messages) {
+		startIndex = len(messages)
+	}
+
 	return messages[startIndex:endIndex]
 }
 
