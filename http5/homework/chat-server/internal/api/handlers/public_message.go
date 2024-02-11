@@ -9,7 +9,7 @@ import (
 	"github.com/go-chi/chi"
 	"net/http"
 
-	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/api/request"
+	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/api/models/request"
 	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/domain/entities"
 )
 
@@ -41,7 +41,6 @@ func (h *PublicChatHandler) Routes() chi.Router {
 }
 
 // SendPublicMessage
-//
 //	@Summary		Send a public chat message
 //	@Description	Sends a public chat message using the provided text content
 //	@Tags			messages
@@ -51,8 +50,8 @@ func (h *PublicChatHandler) Routes() chi.Router {
 //	@Security		BasicAuth
 //	@Success		200	{object}	entities.Message	"Message successfully sent"
 //	@Failure		400	{string}	string				"Bad Request: Invalid request body"
+//	@Failure		400	{string}	string				"Bad Request: Send public message error"
 //	@Failure		401	{string}	string				"Unauthorized: Missing or invalid API key"
-//	@Failure		500	{string}	string				"Bad Request: Send public message error"
 //	@Failure		500	{string}	string				"JSON encoding error"
 //	@Router			/messages/public [post]
 func (h *PublicChatHandler) SendPublicMessage(w http.ResponseWriter, r *http.Request) {
@@ -60,7 +59,7 @@ func (h *PublicChatHandler) SendPublicMessage(w http.ResponseWriter, r *http.Req
 
 	err := apiutils.DecodeRequestBody(r, &textMessage)
 	if err != nil {
-		baseresponse.RenderErr(w, r, err)
+		baseresponse.RenderErr(w, r, fmt.Errorf("%w: %s", constants.ErrBadRequest, err))
 		return
 	}
 
@@ -86,7 +85,6 @@ func (h *PublicChatHandler) SendPublicMessage(w http.ResponseWriter, r *http.Req
 }
 
 // ShowPublicMessage
-//
 //	@Summary		Get public chat messages
 //	@Description	Retrieves public chat messages with pagination support
 //	@Tags			messages
@@ -96,7 +94,7 @@ func (h *PublicChatHandler) SendPublicMessage(w http.ResponseWriter, r *http.Req
 //	@Param			offset	query	integer	true	"Start number for pagination (positive integer)"
 //	@Security		BasicAuth
 //	@Success		200	{object}	[]entities.Message	"List of public messages"
-//	@Failure		400	{string}	string				"Bad Request: Invalid page number"
+//	@Failure		400	{string}	string				"Invalid paginate parameters"
 //	@Failure		401	{string}	string				"Unauthorized: Missing or invalid API key"
 //	@Failure		500	{string}	string				"Bad Request: Get public messages error"
 //	@Router			/messages/public [get]

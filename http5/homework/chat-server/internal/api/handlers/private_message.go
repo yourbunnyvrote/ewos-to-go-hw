@@ -3,7 +3,7 @@ package handlers
 import (
 	"fmt"
 	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/api/mapper"
-	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/api/request"
+	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/api/models/request"
 	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/domain/entities"
 	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/pkg/apiutils"
 	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/pkg/constants"
@@ -42,7 +42,6 @@ func (h *PrivateChatHandler) Routes() chi.Router {
 }
 
 // SendPrivateMessage
-//
 //	@Summary		Send a private chat message
 //	@Description	Sends a private chat message to a specific user
 //	@Tags			messages
@@ -53,8 +52,9 @@ func (h *PrivateChatHandler) Routes() chi.Router {
 //	@Security		BasicAuth
 //	@Success		200	{object}	entities.Message	"Message successfully sent"
 //	@Failure		400	{string}	string				"Bad Request: Invalid request body or missing receiver"
+//	@Failure		400	{string}	string				"Bad Request: Send private message error"
 //	@Failure		401	{string}	string				"Unauthorized: Missing or invalid API key"
-//	@Failure		500	{string}	string				"Bad Request: Send private message error"
+//	@Failure		500	{string}	string				"Failed to retrieve data from the query context"
 //	@Failure		500	{string}	string				"JSON encoding error"
 //	@Router			/messages/private [post]
 func (h *PrivateChatHandler) SendPrivateMessage(w http.ResponseWriter, r *http.Request) {
@@ -62,7 +62,7 @@ func (h *PrivateChatHandler) SendPrivateMessage(w http.ResponseWriter, r *http.R
 
 	err := apiutils.DecodeRequestBody(r, &textMessage)
 	if err != nil {
-		baseresponse.RenderErr(w, r, err)
+		baseresponse.RenderErr(w, r, fmt.Errorf("%w: %s", constants.ErrBadRequest, err))
 		return
 	}
 
@@ -92,7 +92,6 @@ func (h *PrivateChatHandler) SendPrivateMessage(w http.ResponseWriter, r *http.R
 }
 
 // ShowPrivateMessages
-//
 //	@Summary		Get private chat messages
 //	@Description	Retrieves private chat messages with pagination support
 //	@Tags			messages
@@ -103,9 +102,12 @@ func (h *PrivateChatHandler) SendPrivateMessage(w http.ResponseWriter, r *http.R
 //	@Param			username	query	string	true	"Username of the message receiver"
 //	@Security		BasicAuth
 //	@Success		200	{object}	[]entities.Message	"List of private messages"
-//	@Failure		400	{string}	string				"Bad Request: Invalid page number or missing receiver"
+//	@Failure		400	{string}	string				"Missing receiver"
+//	@Failure		400	{string}	string				"Invalid paginate parameters"
 //	@Failure		401	{string}	string				"Unauthorized: Missing or invalid API key"
-//	@Failure		500	{string}	string				"Bad Request: Get private messages error"
+//	@Failure		404	{string}	string				"There is no dialog with such a person"
+//	@Failure		500	{string}	string				"Failed to retrieve data from the query context"
+//	@Failure		500	{string}	string				"JSON encoding error"
 //	@Router			/messages/private [get]
 func (h *PrivateChatHandler) ShowPrivateMessages(w http.ResponseWriter, r *http.Request) {
 	receiver := r.URL.Query().Get(constants.UsernameQueryParameter)
@@ -140,7 +142,6 @@ func (h *PrivateChatHandler) ShowPrivateMessages(w http.ResponseWriter, r *http.
 }
 
 // ShowUsersWithMessages
-//
 //	@Summary		Get users with received private messages
 //	@Description	Retrieves a list of users who have sent private messages to the authenticated user
 //	@Tags			messages
@@ -149,13 +150,13 @@ func (h *PrivateChatHandler) ShowPrivateMessages(w http.ResponseWriter, r *http.
 //	@Security		BasicAuth
 //	@Success		200	{object}	[]string	"List of usernames with received private messages"
 //	@Failure		401	{string}	string		"Unauthorized: Missing or invalid API key"
-//	@Failure		400	{string}	string		"Bad Request: Get users with messages error"
+//	@Failure		500	{string}	string		"Failed to retrieve data from the query context"
 //	@Failure		500	{string}	string		"JSON encoding error"
-//	@Router			/messages/users [get]
+//	@Router			/messages/private/users [get]
 func (h *PrivateChatHandler) ShowUsersWithMessages(w http.ResponseWriter, r *http.Request) {
 	username, ok := r.Context().Value(constants.RouteContextUsernameValue).(string)
 	if !ok {
-		http.Error(w, "Failed to get username from context", http.StatusInternalServerError)
+		baseresponse.RenderErr(w, r, constants.ErrSomeServer)
 		return
 	}
 

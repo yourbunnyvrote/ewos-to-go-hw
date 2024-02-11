@@ -3,6 +3,7 @@ package handlers
 import (
 	"context"
 	"encoding/base64"
+	"fmt"
 	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/api/mapper"
 	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/pkg/constants"
 	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/pkg/httputils/baseresponse"
@@ -56,7 +57,7 @@ func (h *UserIdentity) Identify(next http.Handler) http.Handler {
 		}
 
 		if user1.Password != user2.Password {
-			baseresponse.RenderErr(w, r, constants.ErrIncorrectPassword)
+			baseresponse.RenderErr(w, r, fmt.Errorf("%w: %s", constants.ErrUnauthorized, constants.ErrIncorrectPassword))
 			return
 		}
 

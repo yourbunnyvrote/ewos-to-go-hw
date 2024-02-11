@@ -12,6 +12,7 @@ import (
 	"os/signal"
 	"syscall"
 
+	_ "github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/docs"
 	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/database"
 
 	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/repository"
