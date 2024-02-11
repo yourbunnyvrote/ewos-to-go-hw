@@ -6,8 +6,10 @@ import (
 )
 
 func (db *ChatDB) AddUsersData(user entities.User) error {
-	if user.Username == "" || user.Password == "" {
-		return constants.ErrEmptyCredentials
+	if user.Username == "" {
+		return constants.ErrUsernameEmpty
+	} else if user.Password == "" {
+		return constants.ErrPasswordEmpty
 	}
 
 	usersData := db.Get("users")
@@ -28,7 +30,7 @@ func (db *ChatDB) AddUsersData(user entities.User) error {
 
 func (db *ChatDB) GetUserData(username string) (entities.User, error) {
 	if username == "" {
-		return entities.User{}, constants.ErrBadRequest
+		return entities.User{}, constants.ErrUsernameEmpty
 	}
 
 	usersData := db.Get("users")

@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"fmt"
 	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/api/mapper"
 	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/api/request"
 	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/domain/entities"
@@ -69,7 +70,7 @@ func (h *PrivateChatHandler) SendPrivateMessage(w http.ResponseWriter, r *http.R
 
 	sender, ok := r.Context().Value(constants.RouteContextUsernameValue).(string)
 	if !ok {
-		baseresponse.RenderErr(w, r, err)
+		baseresponse.RenderErr(w, r, constants.ErrSomeServer)
 		return
 	}
 
@@ -79,7 +80,7 @@ func (h *PrivateChatHandler) SendPrivateMessage(w http.ResponseWriter, r *http.R
 
 	err = h.service.SendPrivateMessage(chat, msg)
 	if err != nil {
-		baseresponse.RenderErr(w, r, err)
+		baseresponse.RenderErr(w, r, fmt.Errorf("%w: %s", constants.ErrBadRequest, err))
 		return
 	}
 
@@ -111,7 +112,7 @@ func (h *PrivateChatHandler) ShowPrivateMessages(w http.ResponseWriter, r *http.
 
 	sender, ok := r.Context().Value(constants.RouteContextUsernameValue).(string)
 	if !ok {
-		baseresponse.RenderErr(w, r, constants.ErrBadRequest)
+		baseresponse.RenderErr(w, r, constants.ErrSomeServer)
 		return
 	}
 
@@ -119,21 +120,17 @@ func (h *PrivateChatHandler) ShowPrivateMessages(w http.ResponseWriter, r *http.
 
 	messages, err := h.service.GetPrivateMessages(chat)
 	if err != nil {
-		baseresponse.RenderErr(w, r, err)
+		baseresponse.RenderErr(w, r, fmt.Errorf("%w: %s", constants.ErrNotFound, err))
 		return
 	}
 
 	limit, offset, err := GetPaginateParameters(w, r)
 	if err != nil {
-		baseresponse.RenderErr(w, r, err)
+		baseresponse.RenderErr(w, r, fmt.Errorf("%w: %s", constants.ErrBadRequest, err))
 		return
 	}
 
-	pageMessages, err := PaginateMessages(messages, limit, offset)
-	if err != nil {
-		baseresponse.RenderErr(w, r, err)
-		return
-	}
+	pageMessages := PaginateMessages(messages, limit, offset)
 
 	err = apiutils.SendResponse(w, http.StatusOK, pageMessages)
 	if err != nil {

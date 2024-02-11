@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"fmt"
 	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/api/mapper"
 	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/pkg/apiutils"
 	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/pkg/constants"
@@ -65,7 +66,7 @@ func (h *PublicChatHandler) SendPublicMessage(w http.ResponseWriter, r *http.Req
 
 	username, ok := r.Context().Value(constants.RouteContextUsernameValue).(string)
 	if !ok {
-		baseresponse.RenderErr(w, r, err)
+		baseresponse.RenderErr(w, r, constants.ErrSomeServer)
 		return
 	}
 
@@ -73,7 +74,7 @@ func (h *PublicChatHandler) SendPublicMessage(w http.ResponseWriter, r *http.Req
 
 	err = h.service.SendPublicMessage(msg)
 	if err != nil {
-		baseresponse.RenderErr(w, r, err)
+		baseresponse.RenderErr(w, r, fmt.Errorf("%w: %s", constants.ErrBadRequest, err))
 		return
 	}
 
@@ -108,15 +109,11 @@ func (h *PublicChatHandler) ShowPublicMessage(w http.ResponseWriter, r *http.Req
 
 	limit, offset, err := GetPaginateParameters(w, r)
 	if err != nil {
-		baseresponse.RenderErr(w, r, err)
+		baseresponse.RenderErr(w, r, fmt.Errorf("%w: %s", constants.ErrBadRequest, err))
 		return
 	}
 
-	pageMessages, err := PaginateMessages(messages, limit, offset)
-	if err != nil {
-		baseresponse.RenderErr(w, r, err)
-		return
-	}
+	pageMessages := PaginateMessages(messages, limit, offset)
 
 	err = apiutils.SendResponse(w, http.StatusOK, pageMessages)
 	if err != nil {

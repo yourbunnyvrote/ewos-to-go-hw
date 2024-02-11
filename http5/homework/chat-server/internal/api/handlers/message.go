@@ -7,19 +7,15 @@ import (
 	"strconv"
 )
 
-func PaginateMessages(messages []entities.Message, limit int, offset int) ([]entities.Message, error) {
-	startIndex := offset - 1
-	endIndex := offset - 1 + limit
-
-	if startIndex >= len(messages) {
-		return nil, constants.ErrEndOfPages
-	}
+func PaginateMessages(messages []entities.Message, limit int, offset int) []entities.Message {
+	startIndex := offset
+	endIndex := startIndex + limit
 
 	if endIndex > len(messages) {
 		endIndex = len(messages)
 	}
 
-	return messages[startIndex:endIndex], nil
+	return messages[startIndex:endIndex]
 }
 
 func GetPaginateParameters(w http.ResponseWriter, r *http.Request) (int, int, error) {
@@ -27,18 +23,18 @@ func GetPaginateParameters(w http.ResponseWriter, r *http.Request) (int, int, er
 
 	limit, err := strconv.Atoi(limitStr)
 	if err != nil {
-		return 0, 0, err
+		return 0, 0, constants.ErrPaginateParameters
 	}
 
 	offsetStr := r.URL.Query().Get(constants.OffsetQueryParameter)
 
 	offset, err := strconv.Atoi(offsetStr)
 	if err != nil {
-		return 0, 0, err
+		return 0, 0, constants.ErrPaginateParameters
 	}
 
-	if limit <= 0 || offset <= 0 {
-		return 0, 0, constants.ErrBadRequest
+	if limit < 0 || offset < 0 {
+		return 0, 0, constants.ErrPaginateParameters
 	}
 
 	return limit, offset, nil

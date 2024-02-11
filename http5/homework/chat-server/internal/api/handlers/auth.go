@@ -88,7 +88,7 @@ func (h *AuthHandler) Authentication(w http.ResponseWriter, r *http.Request) {
 
 	err := apiutils.DecodeRequestBody(r, &user)
 	if err != nil {
-		baseresponse.RenderErr(w, r, err)
+		baseresponse.RenderErr(w, r, fmt.Errorf("%w: %s", constants.ErrBadRequest, err))
 		return
 	}
 
@@ -96,11 +96,16 @@ func (h *AuthHandler) Authentication(w http.ResponseWriter, r *http.Request) {
 
 	response, err := h.service.GetUser(existingUser.Username)
 	if err != nil {
-		baseresponse.RenderErr(w, r, err)
+		baseresponse.RenderErr(w, r, fmt.Errorf("%w: %s", constants.ErrBadRequest, err))
 		return
 	}
 
-	err = apiutils.SendResponse(w, http.StatusOK, response)
+	if existingUser.Password != response.Password {
+		baseresponse.RenderErr(w, r, fmt.Errorf("%w: %s", constants.ErrBadRequest, constants.ErrIncorrectPassword))
+		return
+	}
+
+	err = apiutils.SendResponse(w, http.StatusOK, response.Username)
 	if err != nil {
 		baseresponse.RenderErr(w, r, err)
 		return

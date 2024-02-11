@@ -55,8 +55,8 @@ func (h *UserIdentity) Identify(next http.Handler) http.Handler {
 			return
 		}
 
-		if user1 != user2 {
-			baseresponse.RenderErr(w, r, constants.ErrBadRequest)
+		if user1.Password != user2.Password {
+			baseresponse.RenderErr(w, r, constants.ErrIncorrectPassword)
 			return
 		}
 
