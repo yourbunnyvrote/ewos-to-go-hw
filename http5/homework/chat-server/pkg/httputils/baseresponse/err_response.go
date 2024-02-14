@@ -4,7 +4,6 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/pkg/constants"
 	"github.com/go-chi/render"
 )
 
@@ -49,13 +48,13 @@ func RenderErr(w http.ResponseWriter, r *http.Request, err error) {
 	var respErr render.Renderer
 
 	switch {
-	case errors.Is(err, constants.ErrBadRequest):
+	case errors.Is(err, ErrorBadRequest):
 		respErr = ErrBadRequest(err)
 
-	case errors.Is(err, constants.ErrUnauthorized):
+	case errors.Is(err, ErrorUnauthorized):
 		respErr = ErrUnauthorized(err)
 
-	case errors.Is(err, constants.ErrNotFound):
+	case errors.Is(err, ErrorNotFound):
 		respErr = ErrNotFound(err)
 
 	default:

@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"log"
 	"net/http"
 	"time"
 )
@@ -24,6 +25,8 @@ func (cs *ChatServer) Run(port string, handler http.Handler) error {
 		ReadTimeout:    readTimeout,
 		WriteTimeout:   writeTimeout,
 	}
+
+	log.Println("server started")
 
 	return cs.httpServer.ListenAndServe()
 }

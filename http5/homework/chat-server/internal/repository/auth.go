@@ -1,15 +1,19 @@
 package repository
 
 import (
-	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/database"
 	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/domain/entities"
 )
 
-type AuthDB struct {
-	db *database.ChatDB
+type InMemoryDBAuth interface {
+	AddUsersData(user entities.User) error
+	GetUserData(username string) (entities.User, error)
 }
 
-func NewAuthDB(db *database.ChatDB) *AuthDB {
+type AuthDB struct {
+	db InMemoryDBAuth
+}
+
+func NewAuthDB(db InMemoryDBAuth) *AuthDB {
 	return &AuthDB{db: db}
 }
 

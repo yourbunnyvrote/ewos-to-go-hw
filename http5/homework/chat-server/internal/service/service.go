@@ -8,6 +8,7 @@ import (
 type Authorization interface {
 	CreateUser(user entities.User) (string, error)
 	GetUser(username string) (entities.User, error)
+	Identify(user entities.User) error
 }
 
 type Chatting interface {
@@ -16,6 +17,7 @@ type Chatting interface {
 	GetPublicMessages() ([]entities.Message, error)
 	GetPrivateMessages(chat entities.Chat) ([]entities.Message, error)
 	GetUsersWithMessage(receiver string) ([]string, error)
+	PaginateMessages(messages []entities.Message, limit int, offset int) []entities.Message
 }
 
 type Service struct {

@@ -15,52 +15,6 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/auth/sign-in": {
-            "post": {
-                "description": "Authenticates an existing user based on the provided credentials",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "auth"
-                ],
-                "summary": "Authenticate a user",
-                "parameters": [
-                    {
-                        "description": "User object for authentication",
-                        "name": "user",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/request.User"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "User successfully authenticated",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "400": {
-                        "description": "Authentication error",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "500": {
-                        "description": "JSON encoding error",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
         "/auth/sign-up": {
             "post": {
                 "description": "Creates a new user account based on the provided user data",

@@ -3,43 +3,25 @@ package handlers
 import (
 	"net/http"
 	"strconv"
-
-	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/domain/entities"
-	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/pkg/constants"
 )
 
-func PaginateMessages(messages []entities.Message, limit int, offset int) []entities.Message {
-	startIndex := offset
-	endIndex := startIndex + limit
-
-	if endIndex > len(messages) {
-		endIndex = len(messages)
-	}
-
-	if startIndex > len(messages) {
-		startIndex = len(messages)
-	}
-
-	return messages[startIndex:endIndex]
-}
-
-func GetPaginateParameters(r *http.Request) (limit int, offset int, err error) {
-	limitStr := r.URL.Query().Get(constants.LimitQueryParameter)
+func getPaginateParameters(r *http.Request) (limit int, offset int, err error) {
+	limitStr := r.URL.Query().Get(LimitQueryParameter)
 
 	limit, err = strconv.Atoi(limitStr)
 	if err != nil {
-		return 0, 0, constants.ErrPaginateParameters
+		return 0, 0, ErrorPaginateParameters
 	}
 
-	offsetStr := r.URL.Query().Get(constants.OffsetQueryParameter)
+	offsetStr := r.URL.Query().Get(OffsetQueryParameter)
 
 	offset, err = strconv.Atoi(offsetStr)
 	if err != nil {
-		return 0, 0, constants.ErrPaginateParameters
+		return 0, 0, ErrorPaginateParameters
 	}
 
 	if limit < 0 || offset < 0 {
-		return 0, 0, constants.ErrPaginateParameters
+		return 0, 0, ErrorPaginateParameters
 	}
 
 	return limit, offset, nil

@@ -2,47 +2,55 @@ package database
 
 import (
 	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/domain/entities"
-	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/pkg/constants"
 )
 
 func (db *ChatDB) AddUsersData(user entities.User) error {
 	if user.Username == "" {
-		return constants.ErrUsernameEmpty
+		return ErrorUsernameEmpty
 	} else if user.Password == "" {
-		return constants.ErrPasswordEmpty
+		return ErrorPasswordEmpty
 	}
 
 	usersData := db.Get("users")
 
 	users, ok := usersData.(UsersData)
 	if !ok {
-		return constants.ErrDataError
+		return ErrorDataError
 	}
 
-	if _, exists := users[user.Username]; exists {
-		return constants.ErrUserAlreadyExists
+	db.mu.RLock()
+	_, exists := users[user.Username]
+	db.mu.RUnlock()
+
+	if exists {
+		return ErrorUserAlreadyExists
 	}
 
+	db.mu.Lock()
 	users[user.Username] = user
+	db.mu.RUnlock()
 
 	return nil
 }
 
 func (db *ChatDB) GetUserData(username string) (entities.User, error) {
 	if username == "" {
-		return entities.User{}, constants.ErrUsernameEmpty
+		return entities.User{}, ErrorUsernameEmpty
 	}
 
 	usersData := db.Get("users")
 
 	users, ok := usersData.(UsersData)
 	if !ok {
-		return entities.User{}, constants.ErrDataError
+		return entities.User{}, ErrorDataError
 	}
 
+	db.mu.RLock()
 	findUser, exist := users[username]
+	db.mu.RUnlock()
+
 	if !exist {
-		return entities.User{}, constants.ErrUserNotFound
+		return entities.User{}, ErrorUserNotFound
 	}
 
 	return findUser, nil

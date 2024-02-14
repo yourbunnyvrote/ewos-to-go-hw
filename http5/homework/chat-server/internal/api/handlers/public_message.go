@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"net/http"
 
+	apiutils2 "github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/pkg/httputils"
+	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/pkg/httputils/baseresponse"
+
 	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/api/mapper"
-	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/pkg/apiutils"
-	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/pkg/constants"
-	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/pkg/httputils/baseresponse"
 	"github.com/go-chi/chi"
 
 	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/api/models/request"
@@ -17,6 +17,7 @@ import (
 type PublicChatting interface {
 	SendPublicMessage(msg entities.Message) error
 	GetPublicMessages() ([]entities.Message, error)
+	PaginateMessages(messages []entities.Message, limit int, offset int) []entities.Message
 }
 
 type PublicChatHandler struct {
@@ -59,15 +60,15 @@ func (h *PublicChatHandler) Routes() chi.Router {
 func (h *PublicChatHandler) SendPublicMessage(w http.ResponseWriter, r *http.Request) {
 	var textMessage request.TextMessage
 
-	err := apiutils.DecodeRequestBody(r, &textMessage)
+	err := apiutils2.DecodeRequestBody(r, &textMessage)
 	if err != nil {
-		baseresponse.RenderErr(w, r, fmt.Errorf("%w: %s", constants.ErrBadRequest, err))
+		baseresponse.RenderErr(w, r, fmt.Errorf("%w: %s", ErrorBadRequest, err))
 		return
 	}
 
-	username, ok := r.Context().Value(constants.RouteContextUsernameValue).(string)
+	username, ok := r.Context().Value(RouteContextUsernameValue).(string)
 	if !ok {
-		baseresponse.RenderErr(w, r, constants.ErrSomeServer)
+		baseresponse.RenderErr(w, r, ErrorSomeServer)
 		return
 	}
 
@@ -75,11 +76,11 @@ func (h *PublicChatHandler) SendPublicMessage(w http.ResponseWriter, r *http.Req
 
 	err = h.service.SendPublicMessage(msg)
 	if err != nil {
-		baseresponse.RenderErr(w, r, fmt.Errorf("%w: %s", constants.ErrBadRequest, err))
+		baseresponse.RenderErr(w, r, fmt.Errorf("%w: %s", ErrorBadRequest, err))
 		return
 	}
 
-	err = apiutils.SendResponse(w, http.StatusOK, msg)
+	err = baseresponse.SendResponse(w, http.StatusOK, msg)
 	if err != nil {
 		baseresponse.RenderErr(w, r, err)
 		return
@@ -108,15 +109,15 @@ func (h *PublicChatHandler) ShowPublicMessage(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	limit, offset, err := GetPaginateParameters(r)
+	limit, offset, err := getPaginateParameters(r)
 	if err != nil {
-		baseresponse.RenderErr(w, r, fmt.Errorf("%w: %s", constants.ErrBadRequest, err))
+		baseresponse.RenderErr(w, r, fmt.Errorf("%w: %s", ErrorBadRequest, err))
 		return
 	}
 
-	pageMessages := PaginateMessages(messages, limit, offset)
+	pageMessages := h.service.PaginateMessages(messages, limit, offset)
 
-	err = apiutils.SendResponse(w, http.StatusOK, pageMessages)
+	err = baseresponse.SendResponse(w, http.StatusOK, pageMessages)
 	if err != nil {
 		baseresponse.RenderErr(w, r, err)
 		return

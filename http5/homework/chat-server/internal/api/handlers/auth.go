@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"net/http"
 
+	apiutils2 "github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/pkg/httputils"
+	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/pkg/httputils/baseresponse"
+
 	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/api/mapper"
-	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/pkg/apiutils"
-	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/pkg/constants"
-	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/pkg/httputils/baseresponse"
 	"github.com/go-chi/chi"
 
 	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/api/models/request"
@@ -17,6 +17,7 @@ import (
 type AuthService interface {
 	CreateUser(user entities.User) (string, error)
 	GetUser(username string) (entities.User, error)
+	Identify(user entities.User) error
 }
 
 type AuthHandler struct {
@@ -31,7 +32,6 @@ func (h *AuthHandler) Routes() chi.Router {
 	r := chi.NewRouter()
 
 	r.Post("/sign-up", h.Registration)
-	r.Post("/sign-in", h.Authentication)
 
 	return r
 }
@@ -52,9 +52,9 @@ func (h *AuthHandler) Routes() chi.Router {
 func (h *AuthHandler) Registration(w http.ResponseWriter, r *http.Request) {
 	var user request.User
 
-	err := apiutils.DecodeRequestBody(r, &user)
+	err := apiutils2.DecodeRequestBody(r, &user)
 	if err != nil {
-		baseresponse.RenderErr(w, r, fmt.Errorf("%w: %s", constants.ErrBadRequest, err))
+		baseresponse.RenderErr(w, r, fmt.Errorf("%w: %s", ErrorBadRequest, err))
 		return
 	}
 
@@ -62,53 +62,11 @@ func (h *AuthHandler) Registration(w http.ResponseWriter, r *http.Request) {
 
 	response, err := h.service.CreateUser(newUser)
 	if err != nil {
-		baseresponse.RenderErr(w, r, fmt.Errorf("%w: %s", constants.ErrBadRequest, err))
+		baseresponse.RenderErr(w, r, fmt.Errorf("%w: %s", ErrorBadRequest, err))
 		return
 	}
 
-	err = apiutils.SendResponse(w, http.StatusCreated, response)
-	if err != nil {
-		baseresponse.RenderErr(w, r, err)
-		return
-	}
-}
-
-// Authentication
-//
-//	@Summary		Authenticate a user
-//	@Description	Authenticates an existing user based on the provided credentials
-//	@Tags			auth
-//	@Accept			json
-//	@Produce		json
-//	@Param			user	body		request.User	true	"User object for authentication"
-//	@Success		200		{object}	string			"User successfully authenticated"
-//	@Failure		400		{string}	string			"Invalid request body"
-//	@Failure		400		{string}	string			"Authentication error"
-//	@Failure		500		{string}	string			"JSON encoding error"
-//	@Router			/auth/sign-in [post]
-func (h *AuthHandler) Authentication(w http.ResponseWriter, r *http.Request) {
-	var user request.User
-
-	err := apiutils.DecodeRequestBody(r, &user)
-	if err != nil {
-		baseresponse.RenderErr(w, r, fmt.Errorf("%w: %s", constants.ErrBadRequest, err))
-		return
-	}
-
-	existingUser := mapper.MakeUser(user.Username, user.Password)
-
-	response, err := h.service.GetUser(existingUser.Username)
-	if err != nil {
-		baseresponse.RenderErr(w, r, fmt.Errorf("%w: %s", constants.ErrBadRequest, err))
-		return
-	}
-
-	if existingUser.Password != response.Password {
-		baseresponse.RenderErr(w, r, fmt.Errorf("%w: %s", constants.ErrUnauthorized, constants.ErrIncorrectPassword))
-		return
-	}
-
-	err = apiutils.SendResponse(w, http.StatusOK, response.Username)
+	err = baseresponse.SendResponse(w, http.StatusCreated, response)
 	if err != nil {
 		baseresponse.RenderErr(w, r, err)
 		return

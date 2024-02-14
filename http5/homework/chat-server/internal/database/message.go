@@ -2,22 +2,23 @@ package database
 
 import (
 	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/domain/entities"
-	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/pkg/constants"
 )
 
 func (db *ChatDB) AddPublicMessage(msg entities.Message) error {
 	if msg.Content == "" {
-		return constants.ErrMsgIsEmpty
+		return ErrorMsgIsEmpty
 	}
 
 	publicChat := db.Get("public chats")
 
 	messages, ok := publicChat.(PublicChatsData)
 	if !ok {
-		return constants.ErrDataError
+		return ErrorDataError
 	}
 
+	db.mu.Lock()
 	messages = append(messages, msg)
+	db.mu.Unlock()
 
 	db.Insert("public chats", messages)
 
@@ -29,7 +30,7 @@ func (db *ChatDB) GetPublicMessages() ([]entities.Message, error) {
 
 	messages, ok := publicChat.(PublicChatsData)
 	if !ok {
-		return nil, constants.ErrDataError
+		return nil, ErrorDataError
 	}
 
 	return messages, nil
@@ -37,21 +38,23 @@ func (db *ChatDB) GetPublicMessages() ([]entities.Message, error) {
 
 func (db *ChatDB) AddPrivateMessage(chat entities.Chat, msg entities.Message) error {
 	if msg.Content == "" {
-		return constants.ErrMsgIsEmpty
+		return ErrorMsgIsEmpty
 	}
 
 	publicChat := db.Get("private chats")
 
 	chats, ok := publicChat.(PrivateChatsData)
 	if !ok {
-		return constants.ErrDataError
+		return ErrorDataError
 	}
 
 	if chat.User1 < chat.User2 {
 		chat.User1, chat.User2 = chat.User2, chat.User1
 	}
 
+	db.mu.Lock()
 	chats[chat] = append(chats[chat], msg)
+	db.mu.Unlock()
 
 	return nil
 }
@@ -61,14 +64,18 @@ func (db *ChatDB) GetPrivateMessages(chat entities.Chat) ([]entities.Message, er
 
 	chats, ok := privateChat.(PrivateChatsData)
 	if !ok {
-		return nil, constants.ErrDataError
+		return nil, ErrorDataError
 	}
 
 	if chat.User1 < chat.User2 {
 		chat.User1, chat.User2 = chat.User2, chat.User1
 	}
 
-	return chats[chat], nil
+	db.mu.RLock()
+	messages := chats[chat]
+	db.mu.RUnlock()
+
+	return messages, nil
 }
 
 func (db *ChatDB) GetUsersPrivateMessages(username string) ([]string, error) {
@@ -76,20 +83,22 @@ func (db *ChatDB) GetUsersPrivateMessages(username string) ([]string, error) {
 
 	chats, ok := publicChat.(PrivateChatsData)
 	if !ok {
-		return nil, constants.ErrDataError
+		return nil, ErrorDataError
 	}
 
-	result := make([]string, 0)
+	listUsers := make([]string, 0)
 
 	for key := range chats {
 		if key.User1 == username || key.User2 == username {
+			db.mu.Lock()
 			if key.User1 == username {
-				result = append(result, key.User2)
+				listUsers = append(listUsers, key.User2)
 			} else {
-				result = append(result, key.User1)
+				listUsers = append(listUsers, key.User1)
 			}
+			db.mu.Unlock()
 		}
 	}
 
-	return result, nil
+	return listUsers, nil
 }

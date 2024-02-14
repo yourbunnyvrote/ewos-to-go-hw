@@ -3,13 +3,12 @@ package handlers
 import (
 	"context"
 	"encoding/base64"
-	"fmt"
 	"net/http"
 	"strings"
 
+	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/pkg/httputils/baseresponse"
+
 	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/api/mapper"
-	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/pkg/constants"
-	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/pkg/httputils/baseresponse"
 )
 
 type UserIdentity struct {
@@ -43,7 +42,7 @@ func (h *UserIdentity) Identify(next http.Handler) http.Handler {
 		}
 
 		authCredentials := strings.Split(string(decodedAuth), ":")
-		if len(authCredentials) != constants.CountCredentials {
+		if len(authCredentials) != CountCredentials {
 			http.Error(w, "Invalid Authorization credentials", http.StatusUnauthorized)
 			return
 		}
@@ -51,19 +50,13 @@ func (h *UserIdentity) Identify(next http.Handler) http.Handler {
 		username, password := authCredentials[0], authCredentials[1]
 		user1 := mapper.MakeUser(username, password)
 
-		user2, err := h.service.GetUser(username)
+		err = h.service.Identify(user1)
 		if err != nil {
 			baseresponse.RenderErr(w, r, err)
-			return
 		}
 
-		if user1.Password != user2.Password {
-			baseresponse.RenderErr(w, r, fmt.Errorf("%w: %s", constants.ErrUnauthorized, constants.ErrIncorrectPassword))
-			return
-		}
-
-		ctx := context.WithValue(r.Context(), constants.RouteContextUsernameValue, username)
-		ctx = context.WithValue(ctx, constants.RouteContextPasswordValue, password)
+		ctx := context.WithValue(r.Context(), RouteContextUsernameValue, username)
+		ctx = context.WithValue(ctx, RouteContextPasswordValue, password)
 		r = r.WithContext(ctx)
 
 		next.ServeHTTP(w, r)

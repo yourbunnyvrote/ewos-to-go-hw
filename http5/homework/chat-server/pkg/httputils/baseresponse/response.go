@@ -1,10 +1,8 @@
-package apiutils
+package baseresponse
 
 import (
 	"encoding/json"
 	"net/http"
-
-	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/pkg/constants"
 )
 
 type SuccessResponse struct {
@@ -19,12 +17,12 @@ func SendResponse(w http.ResponseWriter, statusCode int, response interface{}) e
 
 	resp, err := json.Marshal(answer)
 	if err != nil {
-		return constants.ErrMarshalResponse
+		return ErrorMarshalResponse
 	}
 
 	_, err = w.Write(resp)
 	if err != nil {
-		return constants.ErrWriteResponse
+		return ErrorWriteResponse
 	}
 
 	return nil

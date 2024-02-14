@@ -1,4 +1,4 @@
-package constants
+package handlers
 
 const (
 	LimitQueryParameter       = "limit"

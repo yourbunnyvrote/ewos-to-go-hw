@@ -2,7 +2,6 @@ package service
 
 import (
 	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/domain/entities"
-
 	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/repository"
 )
 
@@ -32,4 +31,20 @@ func (cs *ChatService) GetPrivateMessages(chat entities.Chat) ([]entities.Messag
 
 func (cs *ChatService) GetUsersWithMessage(receiver string) ([]string, error) {
 	return cs.repos.GetUsersWithMessage(receiver)
+}
+
+// nolint:revive
+func (cs *ChatService) PaginateMessages(messages []entities.Message, limit int, offset int) []entities.Message {
+	startIndex := offset
+	endIndex := startIndex + limit
+
+	if endIndex > len(messages) {
+		endIndex = len(messages)
+	}
+
+	if startIndex > len(messages) {
+		startIndex = len(messages)
+	}
+
+	return messages[startIndex:endIndex]
 }

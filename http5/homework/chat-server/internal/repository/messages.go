@@ -1,15 +1,22 @@
 package repository
 
 import (
-	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/database"
 	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/domain/entities"
 )
 
-type ChattingDB struct {
-	db *database.ChatDB
+type InMemoryDBChat interface {
+	AddPublicMessage(msg entities.Message) error
+	GetPublicMessages() ([]entities.Message, error)
+	AddPrivateMessage(chat entities.Chat, msg entities.Message) error
+	GetPrivateMessages(chat entities.Chat) ([]entities.Message, error)
+	GetUsersPrivateMessages(username string) ([]string, error)
 }
 
-func NewChattingDB(db *database.ChatDB) *ChattingDB {
+type ChattingDB struct {
+	db InMemoryDBChat
+}
+
+func NewChattingDB(db InMemoryDBChat) *ChattingDB {
 	return &ChattingDB{db: db}
 }
 
