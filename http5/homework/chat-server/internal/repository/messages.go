@@ -1,41 +1,121 @@
 package repository
 
 import (
-	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/domain/entities"
+	"github.com/ew0s/ewos-to-go-hw/internal/domain/entities"
+	"sync"
 )
 
-type InMemoryDBChat interface {
-	AddPublicMessage(msg entities.Message) error
-	GetPublicMessages() ([]entities.Message, error)
-	AddPrivateMessage(chat entities.Chat, msg entities.Message) error
-	GetPrivateMessages(chat entities.Chat) ([]entities.Message, error)
-	GetUsersPrivateMessages(username string) ([]string, error)
-}
-
 type ChattingDB struct {
-	db InMemoryDBChat
+	mu *sync.RWMutex
+	db InMemoryDB
 }
 
-func NewChattingDB(db InMemoryDBChat) *ChattingDB {
-	return &ChattingDB{db: db}
+func NewChattingDB(db InMemoryDB) *ChattingDB {
+	return &ChattingDB{
+		mu: &sync.RWMutex{},
+		db: db,
+	}
 }
 
 func (pc *ChattingDB) SendPublicMessage(msg entities.Message) error {
-	return pc.db.AddPublicMessage(msg)
+	pc.mu.Lock()
+	defer pc.mu.Unlock()
+
+	if msg.Content == "" {
+		return ErrorMsgIsEmpty
+	}
+
+	publicChat := pc.db.Get("public chats")
+
+	messages, ok := publicChat.(PublicChatsData)
+	if !ok {
+		return ErrorDataError
+	}
+
+	messages = append(messages, msg)
+
+	pc.db.Insert("public chats", messages)
+
+	return nil
 }
 
-func (pc *ChattingDB) SendPrivateMessage(chat entities.Chat, msg entities.Message) error {
-	return pc.db.AddPrivateMessage(chat, msg)
+func (pc *ChattingDB) SendPrivateMessage(chat entities.UsersPair, msg entities.Message) error {
+	pc.mu.Lock()
+	defer pc.mu.Unlock()
+
+	if msg.Content == "" {
+		return ErrorMsgIsEmpty
+	}
+
+	publicChat := pc.db.Get("private chats")
+
+	chats, ok := publicChat.(PrivateChatsData)
+	if !ok {
+		return ErrorDataError
+	}
+
+	if chat.User1 < chat.User2 {
+		chat.User1, chat.User2 = chat.User2, chat.User1
+	}
+
+	chats[chat] = append(chats[chat], msg)
+
+	return nil
 }
 
 func (pc *ChattingDB) GetPublicMessages() ([]entities.Message, error) {
-	return pc.db.GetPublicMessages()
+	publicChat := pc.db.Get("public chats")
+
+	messages, ok := publicChat.(PublicChatsData)
+	if !ok {
+		return nil, ErrorDataError
+	}
+
+	return messages, nil
 }
 
-func (pc *ChattingDB) GetPrivateMessages(chat entities.Chat) ([]entities.Message, error) {
-	return pc.db.GetPrivateMessages(chat)
+func (pc *ChattingDB) GetPrivateMessages(chat entities.UsersPair) ([]entities.Message, error) {
+	pc.mu.RLock()
+	defer pc.mu.RUnlock()
+
+	privateChat := pc.db.Get("private chats")
+
+	chats, ok := privateChat.(PrivateChatsData)
+	if !ok {
+		return nil, ErrorDataError
+	}
+
+	if chat.User1 < chat.User2 {
+		chat.User1, chat.User2 = chat.User2, chat.User1
+	}
+
+	messages := chats[chat]
+
+	return messages, nil
 }
 
 func (pc *ChattingDB) GetUsersWithMessage(username string) ([]string, error) {
-	return pc.db.GetUsersPrivateMessages(username)
+	pc.mu.Lock()
+	defer pc.mu.Unlock()
+
+	publicChat := pc.db.Get("private chats")
+
+	chats, ok := publicChat.(PrivateChatsData)
+	if !ok {
+		return nil, ErrorDataError
+	}
+
+	listUsers := make([]string, 0)
+
+	for key := range chats {
+		if key.User1 == username || key.User2 == username {
+			if key.User1 == username {
+				listUsers = append(listUsers, key.User2)
+			} else {
+				listUsers = append(listUsers, key.User1)
+			}
+		}
+	}
+
+	return listUsers, nil
 }

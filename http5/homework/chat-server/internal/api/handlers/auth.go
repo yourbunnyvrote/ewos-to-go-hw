@@ -1,23 +1,22 @@
 package handlers
 
 import (
-	"fmt"
+	"github.com/ew0s/ewos-to-go-hw/internal/api/request"
 	"net/http"
 
-	apiutils2 "github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/pkg/httputils"
-	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/pkg/httputils/baseresponse"
+	"github.com/ew0s/ewos-to-go-hw/pkg/httputils"
+	"github.com/ew0s/ewos-to-go-hw/pkg/httputils/baseresponse"
 
-	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/api/mapper"
+	"github.com/ew0s/ewos-to-go-hw/internal/api/mapper"
 	"github.com/go-chi/chi"
 
-	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/api/models/request"
-	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/domain/entities"
+	"github.com/ew0s/ewos-to-go-hw/internal/domain/entities"
 )
 
 type AuthService interface {
 	CreateUser(user entities.User) (string, error)
 	GetUser(username string) (entities.User, error)
-	Identify(user entities.User) error
+	Identify(user entities.AuthCredentials) error
 }
 
 type AuthHandler struct {
@@ -50,25 +49,25 @@ func (h *AuthHandler) Routes() chi.Router {
 //	@Failure		500		{string}	string			"JSON encoding error"
 //	@Router			/auth/sign-up [post]
 func (h *AuthHandler) Registration(w http.ResponseWriter, r *http.Request) {
-	var user request.User
+	var req request.User
 
-	err := apiutils2.DecodeRequestBody(r, &user)
+	err := httputils.DecodeRequestBody(r, &req)
 	if err != nil {
-		baseresponse.RenderErr(w, r, fmt.Errorf("%w: %s", ErrorBadRequest, err))
+		baseresponse.RenderErr(w, r, http.StatusBadRequest, err)
 		return
 	}
 
-	newUser := mapper.MakeUser(user.Username, user.Password)
+	user := mapper.MakeUser(req.Username, req.Password)
 
-	response, err := h.service.CreateUser(newUser)
+	response, err := h.service.CreateUser(user)
 	if err != nil {
-		baseresponse.RenderErr(w, r, fmt.Errorf("%w: %s", ErrorBadRequest, err))
+		baseresponse.RenderErr(w, r, http.StatusBadRequest, err)
 		return
 	}
 
 	err = baseresponse.SendResponse(w, http.StatusCreated, response)
 	if err != nil {
-		baseresponse.RenderErr(w, r, err)
+		baseresponse.RenderErr(w, r, http.StatusInternalServerError, err)
 		return
 	}
 }

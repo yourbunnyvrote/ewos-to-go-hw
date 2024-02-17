@@ -1,8 +1,8 @@
 package repository
 
 import (
-	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/database"
-	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/domain/entities"
+	"github.com/ew0s/ewos-to-go-hw/internal/database"
+	"github.com/ew0s/ewos-to-go-hw/internal/domain/entities"
 )
 
 type InMemoryDB interface {
@@ -17,9 +17,9 @@ type Authorization interface {
 
 type Chatting interface {
 	SendPublicMessage(msg entities.Message) error
-	SendPrivateMessage(chat entities.Chat, msg entities.Message) error
+	SendPrivateMessage(chat entities.UsersPair, msg entities.Message) error
 	GetPublicMessages() ([]entities.Message, error)
-	GetPrivateMessages(chat entities.Chat) ([]entities.Message, error)
+	GetPrivateMessages(chat entities.UsersPair) ([]entities.Message, error)
 	GetUsersWithMessage(receiver string) ([]string, error)
 }
 
@@ -33,6 +33,10 @@ func NewRepository(db InMemoryDB) *Repository {
 	if !ok {
 		return nil
 	}
+
+	chatDB.Insert("users", UsersData{})
+	chatDB.Insert("public chats", PublicChatsData{})
+	chatDB.Insert("private chats", PrivateChatsData{})
 
 	return &Repository{
 		Auth: NewAuthDB(chatDB),

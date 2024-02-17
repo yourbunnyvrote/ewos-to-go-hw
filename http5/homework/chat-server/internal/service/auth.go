@@ -1,8 +1,8 @@
 package service
 
 import (
-	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/domain/entities"
-	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/repository"
+	"github.com/ew0s/ewos-to-go-hw/internal/domain/entities"
+	"github.com/ew0s/ewos-to-go-hw/internal/repository"
 )
 
 type AuthService struct {
@@ -21,8 +21,8 @@ func (as *AuthService) GetUser(username string) (entities.User, error) {
 	return as.repos.GetUser(username)
 }
 
-func (as *AuthService) Identify(user entities.User) error {
-	checkingUser, err := as.repos.GetUser(user.Username)
+func (as *AuthService) Identify(user entities.AuthCredentials) error {
+	checkingUser, err := as.repos.GetUser(user.Login)
 	if err != nil {
 		return err
 	}

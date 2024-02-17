@@ -1,11 +1,11 @@
 package mapper
 
 import (
-	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/domain/entities"
+	"github.com/ew0s/ewos-to-go-hw/internal/domain/entities"
 )
 
-func MakeChat(user1, user2 string) entities.Chat {
-	return entities.Chat{
+func MakeChat(user1, user2 string) entities.UsersPair {
+	return entities.UsersPair{
 		User1: user1,
 		User2: user2,
 	}

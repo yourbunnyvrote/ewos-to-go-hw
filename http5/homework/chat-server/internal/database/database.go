@@ -2,8 +2,6 @@ package database
 
 import (
 	"sync"
-
-	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/domain/entities"
 )
 
 type ChatDB struct {
@@ -11,21 +9,11 @@ type ChatDB struct {
 	data map[string]interface{}
 }
 
-type (
-	UsersData        map[string]entities.User
-	PublicChatsData  []entities.Message
-	PrivateChatsData map[entities.Chat][]entities.Message
-)
-
 func NewChatDB() *ChatDB {
 	db := ChatDB{
 		mu:   &sync.RWMutex{},
 		data: map[string]interface{}{},
 	}
-
-	db.Insert("users", UsersData{})
-	db.Insert("public chats", PublicChatsData{})
-	db.Insert("private chats", PrivateChatsData{})
 
 	return &db
 }

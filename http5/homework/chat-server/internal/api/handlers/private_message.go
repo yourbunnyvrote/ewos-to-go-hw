@@ -1,23 +1,22 @@
 package handlers
 
 import (
-	"fmt"
+	"github.com/ew0s/ewos-to-go-hw/internal/api/request"
 	"net/http"
 
-	apiutils2 "github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/pkg/httputils"
-	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/pkg/httputils/baseresponse"
+	"github.com/ew0s/ewos-to-go-hw/pkg/httputils"
+	"github.com/ew0s/ewos-to-go-hw/pkg/httputils/baseresponse"
 
-	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/api/mapper"
-	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/api/models/request"
-	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/domain/entities"
+	"github.com/ew0s/ewos-to-go-hw/internal/api/mapper"
+	"github.com/ew0s/ewos-to-go-hw/internal/domain/entities"
 	"github.com/go-chi/chi"
 )
 
 type PrivateChatting interface {
-	SendPrivateMessage(chat entities.Chat, msg entities.Message) error
-	GetPrivateMessages(chat entities.Chat) ([]entities.Message, error)
+	SendPrivateMessage(chat entities.UsersPair, msg entities.Message) error
+	GetPrivateMessages(chat entities.UsersPair) ([]entities.Message, error)
 	GetUsersWithMessage(receiver string) ([]string, error)
-	PaginateMessages(messages []entities.Message, limit int, offset int) []entities.Message
+	PaginateMessages(messages []entities.Message, param entities.PaginateParam) []entities.Message
 }
 
 type PrivateChatHandler struct {
@@ -61,11 +60,11 @@ func (h *PrivateChatHandler) Routes() chi.Router {
 //	@Failure		500	{string}	string				"JSON encoding error"
 //	@Router			/messages/private [post]
 func (h *PrivateChatHandler) SendPrivateMessage(w http.ResponseWriter, r *http.Request) {
-	var textMessage request.TextMessage
+	var req request.TextMessage
 
-	err := apiutils2.DecodeRequestBody(r, &textMessage)
+	err := httputils.DecodeRequestBody(r, &req)
 	if err != nil {
-		baseresponse.RenderErr(w, r, fmt.Errorf("%w: %s", ErrorBadRequest, err))
+		baseresponse.RenderErr(w, r, http.StatusBadRequest, err)
 		return
 	}
 
@@ -73,23 +72,23 @@ func (h *PrivateChatHandler) SendPrivateMessage(w http.ResponseWriter, r *http.R
 
 	sender, ok := r.Context().Value(RouteContextUsernameValue).(string)
 	if !ok {
-		baseresponse.RenderErr(w, r, ErrorSomeServer)
+		baseresponse.RenderErr(w, r, http.StatusInternalServerError, ErrorSomeServer)
 		return
 	}
 
 	chat := mapper.MakeChat(receiver, sender)
 
-	msg := mapper.MakeMessage(sender, textMessage.Content)
+	msg := mapper.MakeMessage(sender, req.Content)
 
 	err = h.service.SendPrivateMessage(chat, msg)
 	if err != nil {
-		baseresponse.RenderErr(w, r, fmt.Errorf("%w: %s", ErrorBadRequest, err))
+		baseresponse.RenderErr(w, r, http.StatusBadRequest, err)
 		return
 	}
 
 	err = baseresponse.SendResponse(w, http.StatusOK, msg)
 	if err != nil {
-		baseresponse.RenderErr(w, r, err)
+		baseresponse.RenderErr(w, r, http.StatusInternalServerError, ErrorSomeServer)
 		return
 	}
 }
@@ -118,7 +117,7 @@ func (h *PrivateChatHandler) ShowPrivateMessages(w http.ResponseWriter, r *http.
 
 	sender, ok := r.Context().Value(RouteContextUsernameValue).(string)
 	if !ok {
-		baseresponse.RenderErr(w, r, ErrorSomeServer)
+		baseresponse.RenderErr(w, r, http.StatusInternalServerError, ErrorSomeServer)
 		return
 	}
 
@@ -126,21 +125,21 @@ func (h *PrivateChatHandler) ShowPrivateMessages(w http.ResponseWriter, r *http.
 
 	messages, err := h.service.GetPrivateMessages(chat)
 	if err != nil {
-		baseresponse.RenderErr(w, r, fmt.Errorf("%w: %s", ErrorNotFound, err))
+		baseresponse.RenderErr(w, r, http.StatusNotFound, err)
 		return
 	}
 
-	limit, offset, err := getPaginateParameters(r)
+	params, err := getPaginateParameters(r)
 	if err != nil {
-		baseresponse.RenderErr(w, r, fmt.Errorf("%w: %s", ErrorBadRequest, err))
+		baseresponse.RenderErr(w, r, http.StatusBadRequest, err)
 		return
 	}
 
-	pageMessages := h.service.PaginateMessages(messages, limit, offset)
+	pageMessages := h.service.PaginateMessages(messages, params)
 
 	err = baseresponse.SendResponse(w, http.StatusOK, pageMessages)
 	if err != nil {
-		baseresponse.RenderErr(w, r, err)
+		baseresponse.RenderErr(w, r, http.StatusInternalServerError, err)
 		return
 	}
 }
@@ -161,19 +160,19 @@ func (h *PrivateChatHandler) ShowPrivateMessages(w http.ResponseWriter, r *http.
 func (h *PrivateChatHandler) ShowUsersWithMessages(w http.ResponseWriter, r *http.Request) {
 	username, ok := r.Context().Value(RouteContextUsernameValue).(string)
 	if !ok {
-		baseresponse.RenderErr(w, r, ErrorSomeServer)
+		baseresponse.RenderErr(w, r, http.StatusInternalServerError, ErrorSomeServer)
 		return
 	}
 
 	usersList, err := h.service.GetUsersWithMessage(username)
 	if err != nil {
-		baseresponse.RenderErr(w, r, err)
+		baseresponse.RenderErr(w, r, http.StatusInternalServerError, ErrorSomeServer)
 		return
 	}
 
 	err = baseresponse.SendResponse(w, http.StatusOK, usersList)
 	if err != nil {
-		baseresponse.RenderErr(w, r, err)
+		baseresponse.RenderErr(w, r, http.StatusInternalServerError, ErrorSomeServer)
 		return
 	}
 }

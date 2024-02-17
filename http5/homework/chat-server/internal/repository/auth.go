@@ -1,35 +1,69 @@
 package repository
 
 import (
-	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/domain/entities"
+	"github.com/ew0s/ewos-to-go-hw/internal/domain/entities"
+	"sync"
 )
 
-type InMemoryDBAuth interface {
-	AddUsersData(user entities.User) error
-	GetUserData(username string) (entities.User, error)
-}
-
 type AuthDB struct {
-	db InMemoryDBAuth
+	mu *sync.RWMutex
+	db InMemoryDB
 }
 
-func NewAuthDB(db InMemoryDBAuth) *AuthDB {
-	return &AuthDB{db: db}
+func NewAuthDB(db InMemoryDB) *AuthDB {
+	return &AuthDB{
+		mu: &sync.RWMutex{},
+		db: db,
+	}
 }
 
 func (a *AuthDB) CreateUser(user entities.User) (string, error) {
-	err := a.db.AddUsersData(user)
-	if err != nil {
-		return "", err
+	a.mu.Lock()
+	defer a.mu.Unlock()
+
+	if user.Username == "" {
+		return "", ErrorUsernameEmpty
+	} else if user.Password == "" {
+		return "", ErrorPasswordEmpty
 	}
+
+	usersData := a.db.Get("users")
+
+	users, ok := usersData.(UsersData)
+	if !ok {
+		return "", ErrorDataError
+	}
+
+	_, exists := users[user.Username]
+
+	if exists {
+		return "", ErrorUserAlreadyExists
+	}
+
+	users[user.Username] = user
 
 	return user.Username, nil
 }
 
 func (a *AuthDB) GetUser(username string) (entities.User, error) {
-	findUser, err := a.db.GetUserData(username)
-	if err != nil {
-		return entities.User{}, err
+	a.mu.RLock()
+	defer a.mu.RUnlock()
+
+	if username == "" {
+		return entities.User{}, ErrorUsernameEmpty
+	}
+
+	usersData := a.db.Get("users")
+
+	users, ok := usersData.(UsersData)
+	if !ok {
+		return entities.User{}, ErrorDataError
+	}
+
+	findUser, exist := users[username]
+
+	if !exist {
+		return entities.User{}, ErrorUserNotFound
 	}
 
 	return findUser, nil

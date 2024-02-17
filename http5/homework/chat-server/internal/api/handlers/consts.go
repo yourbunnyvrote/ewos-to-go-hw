@@ -1,10 +1,13 @@
 package handlers
 
 const (
-	LimitQueryParameter       = "limit"
-	OffsetQueryParameter      = "offset"
-	UsernameQueryParameter    = "username"
+	LimitQueryParameter  = "limit"
+	OffsetQueryParameter = "offset"
+
+	UsernameQueryParameter = "username"
+
 	RouteContextUsernameValue = "username"
 	RouteContextPasswordValue = "password"
-	CountCredentials          = 2
+
+	CountCredentials = 2
 )

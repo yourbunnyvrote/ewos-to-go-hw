@@ -1,23 +1,23 @@
 package service
 
 import (
-	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/domain/entities"
-	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/repository"
+	"github.com/ew0s/ewos-to-go-hw/internal/domain/entities"
+	"github.com/ew0s/ewos-to-go-hw/internal/repository"
 )
 
 type Authorization interface {
 	CreateUser(user entities.User) (string, error)
 	GetUser(username string) (entities.User, error)
-	Identify(user entities.User) error
+	Identify(user entities.AuthCredentials) error
 }
 
 type Chatting interface {
 	SendPublicMessage(msg entities.Message) error
-	SendPrivateMessage(chat entities.Chat, msg entities.Message) error
+	SendPrivateMessage(chat entities.UsersPair, msg entities.Message) error
 	GetPublicMessages() ([]entities.Message, error)
-	GetPrivateMessages(chat entities.Chat) ([]entities.Message, error)
+	GetPrivateMessages(chat entities.UsersPair) ([]entities.Message, error)
 	GetUsersWithMessage(receiver string) ([]string, error)
-	PaginateMessages(messages []entities.Message, limit int, offset int) []entities.Message
+	PaginateMessages(messages []entities.Message, params entities.PaginateParam) []entities.Message
 }
 
 type Service struct {

@@ -7,18 +7,18 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/pkg/api"
-	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/pkg/httputils/server"
+	"github.com/ew0s/ewos-to-go-hw/pkg/api"
+	"github.com/ew0s/ewos-to-go-hw/pkg/httputils/server"
 
-	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/api/handlers"
+	"github.com/ew0s/ewos-to-go-hw/internal/api/handlers"
 	"github.com/go-chi/chi"
 	httpSwagger "github.com/swaggo/http-swagger"
 
-	_ "github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/docs"
-	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/database"
+	_ "github.com/ew0s/ewos-to-go-hw/docs"
+	"github.com/ew0s/ewos-to-go-hw/internal/database"
 
-	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/repository"
-	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/service"
+	"github.com/ew0s/ewos-to-go-hw/internal/repository"
+	"github.com/ew0s/ewos-to-go-hw/internal/service"
 )
 
 //	@title			Chat API

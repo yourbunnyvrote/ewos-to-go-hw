@@ -1,12 +1,10 @@
 package mapper
 
-import (
-	"github.com/ew0s/ewos-to-go-hw/http5/homework/chat-server/internal/domain/entities"
-)
+import "github.com/ew0s/ewos-to-go-hw/internal/domain/entities"
 
-func MakeUser(username, password string) entities.User {
-	return entities.User{
-		Username: username,
+func MakeAuthCredentials(login, password string) entities.AuthCredentials {
+	return entities.AuthCredentials{
+		Login:    login,
 		Password: password,
 	}
 }
