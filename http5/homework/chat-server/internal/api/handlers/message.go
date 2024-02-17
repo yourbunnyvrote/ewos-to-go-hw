@@ -1,9 +1,10 @@
 package handlers
 
 import (
-	"github.com/ew0s/ewos-to-go-hw/internal/domain/entities"
 	"net/http"
 	"strconv"
+
+	"github.com/ew0s/ewos-to-go-hw/internal/domain/entities"
 )
 
 func getPaginateParameters(r *http.Request) (entities.PaginateParam, error) {
@@ -26,7 +27,7 @@ func getQueryPaginateParam(r *http.Request) (limit, offset string) {
 	limit = r.URL.Query().Get(LimitQueryParameter)
 	offset = r.URL.Query().Get(OffsetQueryParameter)
 
-	return
+	return limit, offset
 }
 
 func makePaginateParam(limit, offset string) (entities.PaginateParam, error) {

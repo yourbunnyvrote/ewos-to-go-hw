@@ -21,12 +21,16 @@ func NewErrResponse(err error, statusCode int) *ErrResponse {
 	}
 }
 
-func (e *ErrResponse) Render(w http.ResponseWriter, r *http.Request) error {
+func (e *ErrResponse) Render(_ http.ResponseWriter, r *http.Request) error {
 	render.Status(r, e.HTTPStatusCode)
 	return nil
 }
 
 func RenderErr(w http.ResponseWriter, r *http.Request, statusCode int, err error) {
 	respErr := NewErrResponse(err, statusCode)
-	_ = render.Render(w, r, respErr)
+
+	errRender := render.Render(w, r, respErr)
+	if errRender != nil {
+		http.Error(w, "render error", http.StatusInternalServerError)
+	}
 }

@@ -1,8 +1,9 @@
 package handlers
 
 import (
-	"github.com/ew0s/ewos-to-go-hw/internal/api/request"
 	"net/http"
+
+	"github.com/ew0s/ewos-to-go-hw/internal/api/request"
 
 	"github.com/ew0s/ewos-to-go-hw/pkg/httputils"
 	"github.com/ew0s/ewos-to-go-hw/pkg/httputils/baseresponse"

@@ -1,8 +1,9 @@
 package repository
 
 import (
-	"github.com/ew0s/ewos-to-go-hw/internal/domain/entities"
 	"sync"
+
+	"github.com/ew0s/ewos-to-go-hw/internal/domain/entities"
 )
 
 type ChattingDB struct {

@@ -33,7 +33,7 @@ func (cs *ChatService) GetUsersWithMessage(receiver string) ([]string, error) {
 	return cs.repos.GetUsersWithMessage(receiver)
 }
 
-func (cs *ChatService) PaginateMessages(messages []entities.Message, params entities.PaginateParam) []entities.Message {
+func (*ChatService) PaginateMessages(messages []entities.Message, params entities.PaginateParam) []entities.Message {
 	startIndex := params.Offset
 	endIndex := startIndex + params.Limit
 
