@@ -3,6 +3,8 @@ package handlers
 import (
 	"net/http"
 
+	"github.com/go-playground/validator/v10"
+
 	"github.com/ew0s/ewos-to-go-hw/internal/api/request"
 
 	"github.com/ew0s/ewos-to-go-hw/pkg/httputils"
@@ -21,11 +23,15 @@ type AuthService interface {
 }
 
 type AuthHandler struct {
-	service AuthService
+	service  AuthService
+	validate *validator.Validate
 }
 
 func NewAuthHandler(service AuthService) *AuthHandler {
-	return &AuthHandler{service: service}
+	return &AuthHandler{
+		service:  service,
+		validate: validator.New(),
+	}
 }
 
 func (h *AuthHandler) Routes() chi.Router {
@@ -58,6 +64,12 @@ func (h *AuthHandler) Registration(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	err = h.ValidateUser(req)
+	if err != nil {
+		baseresponse.RenderErr(w, r, http.StatusBadRequest, err)
+		return
+	}
+
 	user := mapper.MakeUser(req.Username, req.Password)
 
 	response, err := h.service.CreateUser(user)
@@ -71,4 +83,13 @@ func (h *AuthHandler) Registration(w http.ResponseWriter, r *http.Request) {
 		baseresponse.RenderErr(w, r, http.StatusInternalServerError, err)
 		return
 	}
+}
+
+func (h *AuthHandler) ValidateUser(req request.User) error {
+	err := h.validate.Struct(req)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

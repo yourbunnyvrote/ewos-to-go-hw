@@ -3,6 +3,8 @@ package handlers
 import (
 	"net/http"
 
+	"github.com/go-playground/validator/v10"
+
 	"github.com/ew0s/ewos-to-go-hw/internal/api/request"
 
 	"github.com/ew0s/ewos-to-go-hw/pkg/httputils"
@@ -23,12 +25,14 @@ type PublicChatting interface {
 type PublicChatHandler struct {
 	service      PublicChatting
 	userIdentity *UserIdentity
+	validate     *validator.Validate
 }
 
 func NewPublicChatHandler(service PublicChatting, userIdentity *UserIdentity) *PublicChatHandler {
 	return &PublicChatHandler{
 		service:      service,
 		userIdentity: userIdentity,
+		validate:     validator.New(),
 	}
 }
 
@@ -58,9 +62,15 @@ func (h *PublicChatHandler) Routes() chi.Router {
 //	@Failure		500	{string}	string				"JSON encoding error"
 //	@Router			/messages/public [post]
 func (h *PublicChatHandler) SendPublicMessage(w http.ResponseWriter, r *http.Request) {
-	var textMessage request.TextMessage
+	var req request.TextMessage
 
-	err := httputils.DecodeRequestBody(r, &textMessage)
+	err := httputils.DecodeRequestBody(r, &req)
+	if err != nil {
+		baseresponse.RenderErr(w, r, http.StatusBadRequest, err)
+		return
+	}
+
+	err = h.ValidateMessage(req)
 	if err != nil {
 		baseresponse.RenderErr(w, r, http.StatusBadRequest, err)
 		return
@@ -72,7 +82,7 @@ func (h *PublicChatHandler) SendPublicMessage(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	msg := mapper.MakeMessage(username, textMessage.Content)
+	msg := mapper.MakeMessage(username, req.Content)
 
 	err = h.service.SendPublicMessage(msg)
 	if err != nil {
@@ -122,4 +132,13 @@ func (h *PublicChatHandler) ShowPublicMessage(w http.ResponseWriter, r *http.Req
 		baseresponse.RenderErr(w, r, http.StatusInternalServerError, ErrorSomeServer)
 		return
 	}
+}
+
+func (h *PublicChatHandler) ValidateMessage(req request.TextMessage) error {
+	err := h.validate.Struct(req)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

@@ -22,12 +22,6 @@ func (a *AuthDB) CreateUser(user entities.User) (string, error) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 
-	if user.Username == "" {
-		return "", ErrorUsernameEmpty
-	} else if user.Password == "" {
-		return "", ErrorPasswordEmpty
-	}
-
 	usersData := a.db.Get("users")
 
 	users, ok := usersData.(UsersData)
@@ -49,10 +43,6 @@ func (a *AuthDB) CreateUser(user entities.User) (string, error) {
 func (a *AuthDB) GetUser(username string) (entities.User, error) {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
-
-	if username == "" {
-		return entities.User{}, ErrorUsernameEmpty
-	}
 
 	usersData := a.db.Get("users")
 

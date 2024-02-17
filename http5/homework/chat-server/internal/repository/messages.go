@@ -22,10 +22,6 @@ func (pc *ChattingDB) SendPublicMessage(msg entities.Message) error {
 	pc.mu.Lock()
 	defer pc.mu.Unlock()
 
-	if msg.Content == "" {
-		return ErrorMsgIsEmpty
-	}
-
 	publicChat := pc.db.Get("public chats")
 
 	messages, ok := publicChat.(PublicChatsData)
@@ -43,10 +39,6 @@ func (pc *ChattingDB) SendPublicMessage(msg entities.Message) error {
 func (pc *ChattingDB) SendPrivateMessage(chat entities.UsersPair, msg entities.Message) error {
 	pc.mu.Lock()
 	defer pc.mu.Unlock()
-
-	if msg.Content == "" {
-		return ErrorMsgIsEmpty
-	}
 
 	publicChat := pc.db.Get("private chats")
 

@@ -3,6 +3,8 @@ package handlers
 import (
 	"net/http"
 
+	"github.com/go-playground/validator/v10"
+
 	"github.com/ew0s/ewos-to-go-hw/internal/api/request"
 
 	"github.com/ew0s/ewos-to-go-hw/pkg/httputils"
@@ -23,12 +25,14 @@ type PrivateChatting interface {
 type PrivateChatHandler struct {
 	service      PrivateChatting
 	userIdentity *UserIdentity
+	validate     *validator.Validate
 }
 
 func NewPrivateChatHandler(service PrivateChatting, userIdentity *UserIdentity) *PrivateChatHandler {
 	return &PrivateChatHandler{
 		service:      service,
 		userIdentity: userIdentity,
+		validate:     validator.New(),
 	}
 }
 
@@ -69,7 +73,16 @@ func (h *PrivateChatHandler) SendPrivateMessage(w http.ResponseWriter, r *http.R
 		return
 	}
 
+	err = h.ValidateMessage(req)
+	if err != nil {
+		baseresponse.RenderErr(w, r, http.StatusBadRequest, err)
+		return
+	}
+
 	receiver := r.URL.Query().Get(UsernameQueryParameter)
+	if receiver == "" {
+		baseresponse.RenderErr(w, r, http.StatusBadRequest, ErrorEmptyReceiver)
+	}
 
 	sender, ok := r.Context().Value(RouteContextUsernameValue).(string)
 	if !ok {
@@ -115,6 +128,9 @@ func (h *PrivateChatHandler) SendPrivateMessage(w http.ResponseWriter, r *http.R
 //	@Router			/messages/private [get]
 func (h *PrivateChatHandler) ShowPrivateMessages(w http.ResponseWriter, r *http.Request) {
 	receiver := r.URL.Query().Get(UsernameQueryParameter)
+	if receiver == "" {
+		baseresponse.RenderErr(w, r, http.StatusBadRequest, ErrorEmptyReceiver)
+	}
 
 	sender, ok := r.Context().Value(RouteContextUsernameValue).(string)
 	if !ok {
@@ -176,4 +192,13 @@ func (h *PrivateChatHandler) ShowUsersWithMessages(w http.ResponseWriter, r *htt
 		baseresponse.RenderErr(w, r, http.StatusInternalServerError, ErrorSomeServer)
 		return
 	}
+}
+
+func (h *PrivateChatHandler) ValidateMessage(req request.TextMessage) error {
+	err := h.validate.Struct(req)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
