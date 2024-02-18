@@ -1,5 +1,5 @@
 package request
 
-type TextMessage struct {
+type MessageRequest struct {
 	Content string `json:"content" validate:"required"`
 }

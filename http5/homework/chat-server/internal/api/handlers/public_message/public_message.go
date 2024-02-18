@@ -64,7 +64,7 @@ func (h *PublicChatHandler) Routes() chi.Router {
 //	@Failure		500	{string}	string				"JSON encoding error"
 //	@Router			/v1/messages/public [post]
 func (h *PublicChatHandler) SendPublicMessage(w http.ResponseWriter, r *http.Request) {
-	var req request.TextMessage
+	var req request.MessageRequest
 
 	err := httputils.DecodeRequestBody(r, &req)
 	if err != nil {
@@ -84,7 +84,7 @@ func (h *PublicChatHandler) SendPublicMessage(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	msg := mapper.MakeMessage(username, req.Content)
+	msg := mapper.MakeEntityMessage(username, req.Content)
 
 	err = h.service.SendPublicMessage(msg)
 	if err != nil {
@@ -92,7 +92,9 @@ func (h *PublicChatHandler) SendPublicMessage(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	err = baseresponse.SendResponse(w, http.StatusOK, msg)
+	response := mapper.MakeSendingMessageResponse(msg)
+
+	err = baseresponse.SendResponse(w, http.StatusOK, response)
 	if err != nil {
 		baseresponse.RenderErr(w, r, http.StatusInternalServerError, err)
 		return
@@ -129,14 +131,16 @@ func (h *PublicChatHandler) ShowPublicMessage(w http.ResponseWriter, r *http.Req
 
 	pageMessages := h.service.PaginateMessages(messages, params)
 
-	err = baseresponse.SendResponse(w, http.StatusOK, pageMessages)
+	response := mapper.MakeGettingMessagesResponse(pageMessages)
+
+	err = baseresponse.SendResponse(w, http.StatusOK, response)
 	if err != nil {
 		baseresponse.RenderErr(w, r, http.StatusInternalServerError, handlers.ErrorSomeServer)
 		return
 	}
 }
 
-func (h *PublicChatHandler) ValidateMessage(req request.TextMessage) error {
+func (h *PublicChatHandler) ValidateMessage(req request.MessageRequest) error {
 	err := h.validate.Struct(req)
 	if err != nil {
 		return err

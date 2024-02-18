@@ -57,7 +57,7 @@ func (h *UserIdentity) Identify(next http.Handler) http.Handler {
 			return
 		}
 
-		credentials := mapper.MakeAuthCredentials(authCredentials[0], authCredentials[1])
+		credentials := mapper.MakeEntityAuthCredentials(authCredentials[0], authCredentials[1])
 
 		err = h.ValidateCredentials(credentials)
 		if err != nil {
