@@ -15,12 +15,12 @@ import (
 	"github.com/ew0s/ewos-to-go-hw/internal/api/handlers/private_message"
 	"github.com/ew0s/ewos-to-go-hw/internal/api/handlers/public_message"
 	"github.com/ew0s/ewos-to-go-hw/internal/database"
-	auth2 "github.com/ew0s/ewos-to-go-hw/internal/repository/auth"
-	privateMessage2 "github.com/ew0s/ewos-to-go-hw/internal/repository/private_message"
-	publicMessage2 "github.com/ew0s/ewos-to-go-hw/internal/repository/public_message"
-	auth3 "github.com/ew0s/ewos-to-go-hw/internal/service/auth"
-	privateMessage3 "github.com/ew0s/ewos-to-go-hw/internal/service/private_message"
-	publicMessage3 "github.com/ew0s/ewos-to-go-hw/internal/service/public_message"
+	reposAuth "github.com/ew0s/ewos-to-go-hw/internal/repository/auth"
+	reposPrivateMessage "github.com/ew0s/ewos-to-go-hw/internal/repository/private_message"
+	reposPublicMessage "github.com/ew0s/ewos-to-go-hw/internal/repository/public_message"
+	serviceAuth "github.com/ew0s/ewos-to-go-hw/internal/service/auth"
+	servicePrivateMessage "github.com/ew0s/ewos-to-go-hw/internal/service/private_message"
+	servicePublicMessage "github.com/ew0s/ewos-to-go-hw/internal/service/public_message"
 	"github.com/ew0s/ewos-to-go-hw/pkg/api"
 	"github.com/ew0s/ewos-to-go-hw/pkg/httputils/server"
 
@@ -41,13 +41,13 @@ import (
 func main() {
 	chatDB := database.NewChatDB()
 
-	authRepo := auth2.NewRepository(chatDB)
-	privateMessageRepo := privateMessage2.NewRepository(chatDB)
-	publicMessageRepo := publicMessage2.NewRepository(chatDB)
+	authRepo := reposAuth.NewRepository(chatDB)
+	privateMessageRepo := reposPrivateMessage.NewRepository(chatDB)
+	publicMessageRepo := reposPublicMessage.NewRepository(chatDB)
 
-	authService := auth3.NewService(authRepo)
-	privateMessageService := privateMessage3.NewService(privateMessageRepo)
-	publicMessageService := publicMessage3.NewService(publicMessageRepo)
+	authService := serviceAuth.NewService(authRepo)
+	privateMessageService := servicePrivateMessage.NewService(privateMessageRepo)
+	publicMessageService := servicePublicMessage.NewService(publicMessageRepo)
 
 	authHandler := auth.NewHandler(authService)
 	userIdentity := middleware.NewUserIdentity(authService)

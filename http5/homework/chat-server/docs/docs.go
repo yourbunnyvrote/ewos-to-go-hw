@@ -15,7 +15,7 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/auth/sign-up": {
+        "/v1/auth/sign-up": {
             "post": {
                 "description": "Creates a new user account based on the provided user data",
                 "consumes": [
@@ -35,7 +35,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/request.User"
+                            "$ref": "#/definitions/request.RegistrationRequest"
                         }
                     }
                 ],
@@ -61,7 +61,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/messages/private": {
+        "/v1/messages/private": {
             "get": {
                 "security": [
                     {
@@ -106,10 +106,7 @@ const docTemplate = `{
                     "200": {
                         "description": "List of private messages",
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/entities.Message"
-                            }
+                            "$ref": "#/definitions/response.ShowPrivateMessagesResponse"
                         }
                     },
                     "400": {
@@ -162,7 +159,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/request.TextMessage"
+                            "$ref": "#/definitions/request.SendPrivateMessageRequest"
                         }
                     },
                     {
@@ -177,7 +174,7 @@ const docTemplate = `{
                     "200": {
                         "description": "Message successfully sent",
                         "schema": {
-                            "$ref": "#/definitions/entities.Message"
+                            "$ref": "#/definitions/response.SendPrivateMessageResponse"
                         }
                     },
                     "400": {
@@ -201,7 +198,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/messages/private/users": {
+        "/v1/messages/private/users": {
             "get": {
                 "security": [
                     {
@@ -223,10 +220,7 @@ const docTemplate = `{
                     "200": {
                         "description": "List of usernames with received private messages",
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "type": "string"
-                            }
+                            "$ref": "#/definitions/response.ShowUsersWithMessagesResponse"
                         }
                     },
                     "401": {
@@ -244,7 +238,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/messages/public": {
+        "/v1/messages/public": {
             "get": {
                 "security": [
                     {
@@ -282,10 +276,7 @@ const docTemplate = `{
                     "200": {
                         "description": "List of public messages",
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/entities.Message"
-                            }
+                            "$ref": "#/definitions/response.ShowPublicMessageResponse"
                         }
                     },
                     "400": {
@@ -332,7 +323,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/request.TextMessage"
+                            "$ref": "#/definitions/request.SendPublicMessageRequest"
                         }
                     }
                 ],
@@ -340,7 +331,7 @@ const docTemplate = `{
                     "200": {
                         "description": "Message successfully sent",
                         "schema": {
-                            "$ref": "#/definitions/entities.Message"
+                            "$ref": "#/definitions/response.SendPublicMessagesResponse"
                         }
                     },
                     "400": {
@@ -377,22 +368,92 @@ const docTemplate = `{
                 }
             }
         },
-        "request.TextMessage": {
+        "request.RegistrationRequest": {
             "type": "object",
-            "properties": {
-                "content": {
-                    "type": "string"
-                }
-            }
-        },
-        "request.User": {
-            "type": "object",
+            "required": [
+                "password",
+                "username"
+            ],
             "properties": {
                 "password": {
                     "type": "string"
                 },
                 "username": {
                     "type": "string"
+                }
+            }
+        },
+        "request.SendPrivateMessageRequest": {
+            "type": "object",
+            "required": [
+                "content"
+            ],
+            "properties": {
+                "content": {
+                    "type": "string"
+                }
+            }
+        },
+        "request.SendPublicMessageRequest": {
+            "type": "object",
+            "required": [
+                "content"
+            ],
+            "properties": {
+                "content": {
+                    "type": "string"
+                }
+            }
+        },
+        "response.SendPrivateMessageResponse": {
+            "type": "object",
+            "properties": {
+                "content": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "response.SendPublicMessagesResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "$ref": "#/definitions/entities.Message"
+                }
+            }
+        },
+        "response.ShowPrivateMessagesResponse": {
+            "type": "object",
+            "properties": {
+                "messages": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/entities.Message"
+                    }
+                }
+            }
+        },
+        "response.ShowPublicMessageResponse": {
+            "type": "object",
+            "properties": {
+                "messages": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/entities.Message"
+                    }
+                }
+            }
+        },
+        "response.ShowUsersWithMessagesResponse": {
+            "type": "object",
+            "properties": {
+                "usernames": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 }
             }
         }
@@ -408,7 +469,7 @@ const docTemplate = `{
 var SwaggerInfo = &swag.Spec{
 	Version:          "1.0",
 	Host:             "localhost:8080",
-	BasePath:         "/v1",
+	BasePath:         "/",
 	Schemes:          []string{},
 	Title:            "Chat API",
 	Description:      "API Server for Chat Application",

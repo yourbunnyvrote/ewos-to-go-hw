@@ -1,4 +1,4 @@
-basePath: /v1
+basePath: /
 definitions:
   entities.Message:
     properties:
@@ -7,17 +7,62 @@ definitions:
       username:
         type: string
     type: object
-  request.TextMessage:
-    properties:
-      content:
-        type: string
-    type: object
-  request.User:
+  request.RegistrationRequest:
     properties:
       password:
         type: string
       username:
         type: string
+    required:
+    - password
+    - username
+    type: object
+  request.SendPrivateMessageRequest:
+    properties:
+      content:
+        type: string
+    required:
+    - content
+    type: object
+  request.SendPublicMessageRequest:
+    properties:
+      content:
+        type: string
+    required:
+    - content
+    type: object
+  response.SendPrivateMessageResponse:
+    properties:
+      content:
+        type: string
+      username:
+        type: string
+    type: object
+  response.SendPublicMessagesResponse:
+    properties:
+      message:
+        $ref: '#/definitions/entities.Message'
+    type: object
+  response.ShowPrivateMessagesResponse:
+    properties:
+      messages:
+        items:
+          $ref: '#/definitions/entities.Message'
+        type: array
+    type: object
+  response.ShowPublicMessageResponse:
+    properties:
+      messages:
+        items:
+          $ref: '#/definitions/entities.Message'
+        type: array
+    type: object
+  response.ShowUsersWithMessagesResponse:
+    properties:
+      usernames:
+        items:
+          type: string
+        type: array
     type: object
 host: localhost:8080
 info:
@@ -26,7 +71,7 @@ info:
   title: Chat API
   version: "1.0"
 paths:
-  /auth/sign-up:
+  /v1/auth/sign-up:
     post:
       consumes:
       - application/json
@@ -37,7 +82,7 @@ paths:
         name: user
         required: true
         schema:
-          $ref: '#/definitions/request.User'
+          $ref: '#/definitions/request.RegistrationRequest'
       produces:
       - application/json
       responses:
@@ -56,7 +101,7 @@ paths:
       summary: Register a new user
       tags:
       - auth
-  /messages/private:
+  /v1/messages/private:
     get:
       consumes:
       - application/json
@@ -83,9 +128,7 @@ paths:
         "200":
           description: List of private messages
           schema:
-            items:
-              $ref: '#/definitions/entities.Message'
-            type: array
+            $ref: '#/definitions/response.ShowPrivateMessagesResponse'
         "400":
           description: Invalid paginate parameters
           schema:
@@ -117,7 +160,7 @@ paths:
         name: text
         required: true
         schema:
-          $ref: '#/definitions/request.TextMessage'
+          $ref: '#/definitions/request.SendPrivateMessageRequest'
       - description: Username of the message receiver
         in: query
         name: username
@@ -129,7 +172,7 @@ paths:
         "200":
           description: Message successfully sent
           schema:
-            $ref: '#/definitions/entities.Message'
+            $ref: '#/definitions/response.SendPrivateMessageResponse'
         "400":
           description: 'Bad Request: Send private message error'
           schema:
@@ -147,7 +190,7 @@ paths:
       summary: Send a private chat message
       tags:
       - messages
-  /messages/private/users:
+  /v1/messages/private/users:
     get:
       consumes:
       - application/json
@@ -159,9 +202,7 @@ paths:
         "200":
           description: List of usernames with received private messages
           schema:
-            items:
-              type: string
-            type: array
+            $ref: '#/definitions/response.ShowUsersWithMessagesResponse'
         "401":
           description: 'Unauthorized: Missing or invalid API key'
           schema:
@@ -175,7 +216,7 @@ paths:
       summary: Get users with received private messages
       tags:
       - messages
-  /messages/public:
+  /v1/messages/public:
     get:
       consumes:
       - application/json
@@ -197,9 +238,7 @@ paths:
         "200":
           description: List of public messages
           schema:
-            items:
-              $ref: '#/definitions/entities.Message'
-            type: array
+            $ref: '#/definitions/response.ShowPublicMessageResponse'
         "400":
           description: Invalid paginate parameters
           schema:
@@ -227,14 +266,14 @@ paths:
         name: text
         required: true
         schema:
-          $ref: '#/definitions/request.TextMessage'
+          $ref: '#/definitions/request.SendPublicMessageRequest'
       produces:
       - application/json
       responses:
         "200":
           description: Message successfully sent
           schema:
-            $ref: '#/definitions/entities.Message'
+            $ref: '#/definitions/response.SendPublicMessagesResponse'
         "400":
           description: 'Bad Request: Send public message error'
           schema:
