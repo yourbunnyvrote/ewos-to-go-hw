@@ -8,26 +8,22 @@ import (
 	"strings"
 
 	"github.com/ew0s/ewos-to-go-hw/internal/domain/entities"
-	"github.com/go-playground/validator/v10"
-
 	"github.com/ew0s/ewos-to-go-hw/pkg/httputils/baseresponse"
 
 	"github.com/ew0s/ewos-to-go-hw/internal/api/mapper"
 )
 
-type Identity interface {
+type IdentityService interface {
 	Identify(user entities.AuthCredentials) error
 }
 
 type UserIdentity struct {
-	service  Identity
-	validate *validator.Validate
+	service IdentityService
 }
 
-func NewUserIdentity(service Identity) *UserIdentity {
+func NewUserIdentity(service IdentityService) *UserIdentity {
 	return &UserIdentity{
-		service:  service,
-		validate: validator.New(),
+		service: service,
 	}
 }
 
@@ -52,7 +48,7 @@ func (h *UserIdentity) Identify(next http.Handler) http.Handler {
 		}
 
 		authCredentials := strings.Split(string(decodedAuth), ":")
-		if len(authCredentials) != handlers.CountCredentials {
+		if len(authCredentials) != CountCredentials {
 			baseresponse.RenderErr(w, r, http.StatusUnauthorized, handlers.ErrUnauthorized)
 			return
 		}
@@ -71,7 +67,7 @@ func (h *UserIdentity) Identify(next http.Handler) http.Handler {
 			return
 		}
 
-		ctx := context.WithValue(r.Context(), handlers.RouteContextCredentials, credentials)
+		ctx := context.WithValue(r.Context(), RouteContextCredentials, credentials)
 		r = r.WithContext(ctx)
 
 		next.ServeHTTP(w, r)

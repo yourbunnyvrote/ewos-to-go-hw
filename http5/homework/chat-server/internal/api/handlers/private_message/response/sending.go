@@ -1,6 +1,6 @@
-package resposne
+package response
 
-type SendingMessageResponse struct {
+type SendPrivateMessageResponse struct {
 	Username string `json:"username"`
 	Content  string `json:"content"`
 }

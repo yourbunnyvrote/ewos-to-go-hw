@@ -1,9 +1,8 @@
 package auth
 
 import (
+	"github.com/ew0s/ewos-to-go-hw/internal/api/handlers/auth/request"
 	"net/http"
-
-	"github.com/ew0s/ewos-to-go-hw/internal/api/request"
 
 	"github.com/ew0s/ewos-to-go-hw/pkg/httputils"
 	"github.com/ew0s/ewos-to-go-hw/pkg/httputils/baseresponse"
@@ -14,16 +13,16 @@ import (
 	"github.com/ew0s/ewos-to-go-hw/internal/domain/entities"
 )
 
-type Service interface {
+type AuthService interface {
 	CreateUser(user entities.AuthCredentials) error
 	GetUser(username string) (entities.AuthCredentials, error)
 }
 
 type Handler struct {
-	service Service
+	service AuthService
 }
 
-func NewHandler(service Service) *Handler {
+func NewHandler(service AuthService) *Handler {
 	return &Handler{
 		service: service,
 	}
@@ -51,7 +50,7 @@ func (h *Handler) Routes() chi.Router {
 //	@Failure		500		{string}	string			"JSON encoding error"
 //	@Router			/v1/auth/sign-up [post]
 func (h *Handler) Registration(w http.ResponseWriter, r *http.Request) {
-	var req request.User
+	var req request.RegistrationRequest
 
 	err := httputils.DecodeRequestBody(r, &req)
 	if err != nil {

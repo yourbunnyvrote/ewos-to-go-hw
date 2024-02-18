@@ -2,12 +2,12 @@ package request
 
 import "github.com/go-playground/validator/v10"
 
-type User struct {
+type RegistrationRequest struct {
 	Username string `json:"username" validate:"required"`
 	Password string `json:"password" validate:"required"`
 }
 
-func (u User) Validate() error {
+func (u RegistrationRequest) Validate() error {
 	validate := validator.New()
 
 	err := validate.Struct(u)

@@ -2,25 +2,25 @@ package private_message
 
 import "github.com/ew0s/ewos-to-go-hw/internal/domain/entities"
 
-type PrivateMessage interface {
-	SendPrivateMessage(chat entities.UsersPair, msg entities.Message) error
-	GetPrivateMessages(chat entities.UsersPair) ([]entities.Message, error)
+type PrivateMessageRepo interface {
+	SendPrivateMessage(chat entities.ChatMetadata, msg entities.Message) error
+	GetPrivateMessages(chat entities.ChatMetadata) ([]entities.Message, error)
 	GetUsersWithMessage(receiver string) ([]string, error)
 }
 
 type Service struct {
-	repos PrivateMessage
+	repos PrivateMessageRepo
 }
 
-func NewService(repos PrivateMessage) *Service {
+func NewService(repos PrivateMessageRepo) *Service {
 	return &Service{repos: repos}
 }
 
-func (cs *Service) SendPrivateMessage(chat entities.UsersPair, msg entities.Message) error {
+func (cs *Service) SendPrivateMessage(chat entities.ChatMetadata, msg entities.Message) error {
 	return cs.repos.SendPrivateMessage(chat, msg)
 }
 
-func (cs *Service) GetPrivateMessages(chat entities.UsersPair) ([]entities.Message, error) {
+func (cs *Service) GetPrivateMessages(chat entities.ChatMetadata) ([]entities.Message, error) {
 	return cs.repos.GetPrivateMessages(chat)
 }
 

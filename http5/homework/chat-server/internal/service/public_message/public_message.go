@@ -2,16 +2,16 @@ package public_message
 
 import "github.com/ew0s/ewos-to-go-hw/internal/domain/entities"
 
-type PublicMessage interface {
+type PublicMessageRepo interface {
 	SendPublicMessage(msg entities.Message) error
 	GetPublicMessages() ([]entities.Message, error)
 }
 
 type Service struct {
-	repos PublicMessage
+	repos PublicMessageRepo
 }
 
-func NewService(repos PublicMessage) *Service {
+func NewService(repos PublicMessageRepo) *Service {
 	return &Service{repos: repos}
 }
 

@@ -3,10 +3,9 @@ package public_message
 import (
 	"github.com/ew0s/ewos-to-go-hw/internal/api/handlers"
 	handlersMapper "github.com/ew0s/ewos-to-go-hw/internal/api/handlers/mapper"
-	"github.com/ew0s/ewos-to-go-hw/internal/api/handlers/middleware"
+	"github.com/ew0s/ewos-to-go-hw/internal/api/handlers/private_message"
+	"github.com/ew0s/ewos-to-go-hw/internal/api/handlers/public_message/request"
 	"net/http"
-
-	"github.com/ew0s/ewos-to-go-hw/internal/api/request"
 
 	"github.com/ew0s/ewos-to-go-hw/pkg/httputils"
 	"github.com/ew0s/ewos-to-go-hw/pkg/httputils/baseresponse"
@@ -17,18 +16,22 @@ import (
 	"github.com/ew0s/ewos-to-go-hw/internal/domain/entities"
 )
 
-type PublicChatting interface {
+type PublicMessageService interface {
 	SendPublicMessage(msg entities.Message) error
 	GetPublicMessages() ([]entities.Message, error)
 	PaginateMessages(messages []entities.Message, params entities.PaginateParam) []entities.Message
 }
 
-type PublicChatHandler struct {
-	service      PublicChatting
-	userIdentity *middleware.UserIdentity
+type Identity interface {
+	Identify(next http.Handler) http.Handler
 }
 
-func NewPublicChatHandler(service PublicChatting, userIdentity *middleware.UserIdentity) *PublicChatHandler {
+type PublicChatHandler struct {
+	service      PublicMessageService
+	userIdentity Identity
+}
+
+func NewPublicChatHandler(service PublicMessageService, userIdentity Identity) *PublicChatHandler {
 	return &PublicChatHandler{
 		service:      service,
 		userIdentity: userIdentity,
@@ -61,7 +64,7 @@ func (h *PublicChatHandler) Routes() chi.Router {
 //	@Failure		500	{string}	string				"JSON encoding error"
 //	@Router			/v1/messages/public [post]
 func (h *PublicChatHandler) SendPublicMessage(w http.ResponseWriter, r *http.Request) {
-	var req request.MessageRequest
+	var req request.SendPublicMessageRequest
 
 	err := httputils.DecodeRequestBody(r, &req)
 	if err != nil {
@@ -75,13 +78,13 @@ func (h *PublicChatHandler) SendPublicMessage(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	username, ok := r.Context().Value(handlers.RouteContextUsernameValue).(string)
+	credentials, ok := r.Context().Value(private_message.RouteContextCredentials).(entities.AuthCredentials)
 	if !ok {
 		baseresponse.RenderErr(w, r, http.StatusInternalServerError, handlers.ErrorSomeServer)
 		return
 	}
 
-	msg := mapper.MakeEntityMessage(username, req.Content)
+	msg := mapper.MakeEntityMessage(credentials.Login, req.Content)
 
 	err = h.service.SendPublicMessage(msg)
 	if err != nil {
@@ -89,7 +92,7 @@ func (h *PublicChatHandler) SendPublicMessage(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	response := mapper.MakeSendingMessageResponse(msg)
+	response := mapper.MakeSendPublicMessageResponse(msg)
 
 	err = baseresponse.SendResponse(w, http.StatusOK, response)
 	if err != nil {
@@ -128,7 +131,7 @@ func (h *PublicChatHandler) ShowPublicMessage(w http.ResponseWriter, r *http.Req
 
 	pageMessages := h.service.PaginateMessages(messages, params)
 
-	response := mapper.MakeGettingMessagesResponse(pageMessages)
+	response := mapper.MakeShowPublicMessagesResponse(pageMessages)
 
 	err = baseresponse.SendResponse(w, http.StatusOK, response)
 	if err != nil {

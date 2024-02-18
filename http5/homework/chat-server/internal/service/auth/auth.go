@@ -5,16 +5,16 @@ import (
 	"github.com/ew0s/ewos-to-go-hw/internal/service"
 )
 
-type Authorization interface {
+type AuthorizationRepo interface {
 	CreateUser(user entities.AuthCredentials) error
 	GetUser(username string) (entities.AuthCredentials, error)
 }
 
 type Service struct {
-	repos Authorization
+	repos AuthorizationRepo
 }
 
-func NewService(repos Authorization) *Service {
+func NewService(repos AuthorizationRepo) *Service {
 	return &Service{
 		repos: repos,
 	}
