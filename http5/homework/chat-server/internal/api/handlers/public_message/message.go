@@ -1,19 +1,18 @@
 package public_message
 
 import (
+	"net/http"
+
 	"github.com/ew0s/ewos-to-go-hw/internal/api/handlers"
 	handlersMapper "github.com/ew0s/ewos-to-go-hw/internal/api/handlers/mapper"
 	"github.com/ew0s/ewos-to-go-hw/internal/api/handlers/private_message"
 	"github.com/ew0s/ewos-to-go-hw/internal/api/handlers/public_message/request"
-	"net/http"
-
+	"github.com/ew0s/ewos-to-go-hw/internal/api/mapper"
+	"github.com/ew0s/ewos-to-go-hw/internal/domain/entities"
 	"github.com/ew0s/ewos-to-go-hw/pkg/httputils"
 	"github.com/ew0s/ewos-to-go-hw/pkg/httputils/baseresponse"
 
-	"github.com/ew0s/ewos-to-go-hw/internal/api/mapper"
 	"github.com/go-chi/chi"
-
-	"github.com/ew0s/ewos-to-go-hw/internal/domain/entities"
 )
 
 type PublicMessageService interface {
@@ -38,7 +37,7 @@ func NewPublicChatHandler(service PublicMessageService, userIdentity Identity) *
 	}
 }
 
-func (h *PublicChatHandler) Routes() chi.Router {
+func (h *PublicChatHandler) Routes() *chi.Mux {
 	r := chi.NewRouter()
 
 	r.Use(h.userIdentity.Identify)

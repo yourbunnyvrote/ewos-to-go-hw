@@ -1,10 +1,10 @@
 package auth
 
 import (
-	"github.com/ew0s/ewos-to-go-hw/internal/repository"
 	"sync"
 
 	"github.com/ew0s/ewos-to-go-hw/internal/domain/entities"
+	"github.com/ew0s/ewos-to-go-hw/internal/repository"
 )
 
 type InMemoryDB interface {

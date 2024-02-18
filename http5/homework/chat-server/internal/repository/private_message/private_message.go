@@ -1,9 +1,10 @@
 package private_message
 
 import (
+	"sync"
+
 	"github.com/ew0s/ewos-to-go-hw/internal/domain/entities"
 	"github.com/ew0s/ewos-to-go-hw/internal/repository"
-	"sync"
 )
 
 type InMemoryDB interface {

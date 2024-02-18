@@ -4,7 +4,7 @@ import (
 	"github.com/go-chi/chi"
 )
 
-func MakeRoutes(basicPath string, routers map[string]chi.Router) chi.Router {
+func MakeRoutes(basicPath string, routers map[string]chi.Router) *chi.Mux {
 	r := chi.NewRouter()
 
 	r.Route(basicPath, func(r chi.Router) {

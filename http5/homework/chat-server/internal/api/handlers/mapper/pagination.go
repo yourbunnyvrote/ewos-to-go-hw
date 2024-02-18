@@ -1,9 +1,10 @@
 package mapper
 
 import (
-	"github.com/ew0s/ewos-to-go-hw/internal/domain/entities"
 	"net/http"
 	"strconv"
+
+	"github.com/ew0s/ewos-to-go-hw/internal/domain/entities"
 )
 
 func GetPaginateParameters(r *http.Request) (entities.PaginateParam, error) {

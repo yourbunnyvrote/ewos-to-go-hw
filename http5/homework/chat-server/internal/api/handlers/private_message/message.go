@@ -1,16 +1,16 @@
 package private_message
 
 import (
+	"net/http"
+
 	"github.com/ew0s/ewos-to-go-hw/internal/api/handlers"
 	handlersMapper "github.com/ew0s/ewos-to-go-hw/internal/api/handlers/mapper"
 	"github.com/ew0s/ewos-to-go-hw/internal/api/handlers/private_message/request"
-	"net/http"
-
+	"github.com/ew0s/ewos-to-go-hw/internal/api/mapper"
+	"github.com/ew0s/ewos-to-go-hw/internal/domain/entities"
 	"github.com/ew0s/ewos-to-go-hw/pkg/httputils"
 	"github.com/ew0s/ewos-to-go-hw/pkg/httputils/baseresponse"
 
-	"github.com/ew0s/ewos-to-go-hw/internal/api/mapper"
-	"github.com/ew0s/ewos-to-go-hw/internal/domain/entities"
 	"github.com/go-chi/chi"
 )
 
@@ -37,7 +37,7 @@ func NewPrivateChatHandler(service PrivateMessageService, userIdentity Identity)
 	}
 }
 
-func (h *PrivateChatHandler) Routes() chi.Router {
+func (h *PrivateChatHandler) Routes() *chi.Mux {
 	r := chi.NewRouter()
 
 	r.Use(h.userIdentity.Identify)

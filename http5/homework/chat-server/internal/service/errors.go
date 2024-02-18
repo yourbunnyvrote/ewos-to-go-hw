@@ -2,6 +2,4 @@ package service
 
 import "errors"
 
-var (
-	ErrIncorrectPassword = errors.New("incorrect password")
-)
+var ErrIncorrectPassword = errors.New("incorrect password")

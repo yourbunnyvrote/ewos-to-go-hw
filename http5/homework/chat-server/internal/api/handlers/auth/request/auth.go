@@ -10,9 +10,5 @@ type RegistrationRequest struct {
 func (u RegistrationRequest) Validate() error {
 	validate := validator.New()
 
-	if err := validate.Struct(u); err != nil {
-		return err
-	}
-
-	return nil
+	return validate.Struct(u)
 }

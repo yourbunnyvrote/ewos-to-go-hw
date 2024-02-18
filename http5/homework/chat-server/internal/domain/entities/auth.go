@@ -10,9 +10,5 @@ type AuthCredentials struct {
 func (ac AuthCredentials) Validate() error {
 	validate := validator.New()
 
-	if err := validate.Struct(ac); err != nil {
-		return err
-	}
-
-	return nil
+	return validate.Struct(ac)
 }

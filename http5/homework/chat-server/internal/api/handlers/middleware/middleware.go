@@ -3,14 +3,13 @@ package middleware
 import (
 	"context"
 	"encoding/base64"
-	"github.com/ew0s/ewos-to-go-hw/internal/api/handlers"
 	"net/http"
 	"strings"
 
+	"github.com/ew0s/ewos-to-go-hw/internal/api/handlers"
+	"github.com/ew0s/ewos-to-go-hw/internal/api/mapper"
 	"github.com/ew0s/ewos-to-go-hw/internal/domain/entities"
 	"github.com/ew0s/ewos-to-go-hw/pkg/httputils/baseresponse"
-
-	"github.com/ew0s/ewos-to-go-hw/internal/api/mapper"
 )
 
 type IdentityService interface {

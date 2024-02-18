@@ -1,16 +1,15 @@
 package auth
 
 import (
-	"github.com/ew0s/ewos-to-go-hw/internal/api/handlers/auth/request"
 	"net/http"
 
+	"github.com/ew0s/ewos-to-go-hw/internal/api/handlers/auth/request"
+	"github.com/ew0s/ewos-to-go-hw/internal/api/mapper"
+	"github.com/ew0s/ewos-to-go-hw/internal/domain/entities"
 	"github.com/ew0s/ewos-to-go-hw/pkg/httputils"
 	"github.com/ew0s/ewos-to-go-hw/pkg/httputils/baseresponse"
 
-	"github.com/ew0s/ewos-to-go-hw/internal/api/mapper"
 	"github.com/go-chi/chi"
-
-	"github.com/ew0s/ewos-to-go-hw/internal/domain/entities"
 )
 
 type AuthService interface {
@@ -28,7 +27,7 @@ func NewHandler(service AuthService) *Handler {
 	}
 }
 
-func (h *Handler) Routes() chi.Router {
+func (h *Handler) Routes() *chi.Mux {
 	r := chi.NewRouter()
 
 	r.Post("/sign-up", h.Registration)

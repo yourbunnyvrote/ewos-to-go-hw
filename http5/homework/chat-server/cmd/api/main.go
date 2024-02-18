@@ -2,30 +2,30 @@ package main
 
 import (
 	"context"
-	"github.com/ew0s/ewos-to-go-hw/internal/api/handlers/auth"
-	"github.com/ew0s/ewos-to-go-hw/internal/api/handlers/middleware"
-	"github.com/ew0s/ewos-to-go-hw/internal/api/handlers/private_message"
-	"github.com/ew0s/ewos-to-go-hw/internal/api/handlers/public_message"
-	auth2 "github.com/ew0s/ewos-to-go-hw/internal/repository/auth"
-	privateMessage2 "github.com/ew0s/ewos-to-go-hw/internal/repository/private_message"
-	publicMessage2 "github.com/ew0s/ewos-to-go-hw/internal/repository/public_message"
-	auth3 "github.com/ew0s/ewos-to-go-hw/internal/service/auth"
-	privateMessage3 "github.com/ew0s/ewos-to-go-hw/internal/service/private_message"
-	publicMessage3 "github.com/ew0s/ewos-to-go-hw/internal/service/public_message"
+	"errors"
 	"log"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 
+	_ "github.com/ew0s/ewos-to-go-hw/docs"
+	"github.com/ew0s/ewos-to-go-hw/internal/api/handlers/auth"
+	"github.com/ew0s/ewos-to-go-hw/internal/api/handlers/middleware"
+	"github.com/ew0s/ewos-to-go-hw/internal/api/handlers/private_message"
+	"github.com/ew0s/ewos-to-go-hw/internal/api/handlers/public_message"
+	"github.com/ew0s/ewos-to-go-hw/internal/database"
+	auth2 "github.com/ew0s/ewos-to-go-hw/internal/repository/auth"
+	privateMessage2 "github.com/ew0s/ewos-to-go-hw/internal/repository/private_message"
+	publicMessage2 "github.com/ew0s/ewos-to-go-hw/internal/repository/public_message"
+	auth3 "github.com/ew0s/ewos-to-go-hw/internal/service/auth"
+	privateMessage3 "github.com/ew0s/ewos-to-go-hw/internal/service/private_message"
+	publicMessage3 "github.com/ew0s/ewos-to-go-hw/internal/service/public_message"
 	"github.com/ew0s/ewos-to-go-hw/pkg/api"
 	"github.com/ew0s/ewos-to-go-hw/pkg/httputils/server"
 
 	"github.com/go-chi/chi"
 	httpSwagger "github.com/swaggo/http-swagger"
-
-	_ "github.com/ew0s/ewos-to-go-hw/docs"
-	"github.com/ew0s/ewos-to-go-hw/internal/database"
 )
 
 //	@title			Chat API
@@ -69,7 +69,7 @@ func main() {
 	serv := new(server.ChatServer)
 
 	go func() {
-		if err := serv.Run(ServerPort, r); err != nil && err != http.ErrServerClosed {
+		if err := serv.Run(ServerPort, r); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			log.Fatalf("error running chat server: %s", err)
 		}
 	}()
@@ -79,10 +79,10 @@ func main() {
 	<-stop
 
 	if err := serv.Shutdown(context.Background()); err != nil {
-		if err != http.ErrServerClosed {
+		if errors.Is(err, http.ErrServerClosed) {
 			log.Fatalf("error shutting down server: %s", err)
-		} else {
-			log.Println("server shut down gracefully")
 		}
+
+		log.Println("server shut down gracefully")
 	}
 }
