@@ -5,8 +5,6 @@ import (
 	"github.com/ew0s/ewos-to-go-hw/internal/api/handlers/middleware"
 	"net/http"
 
-	"github.com/go-playground/validator/v10"
-
 	"github.com/ew0s/ewos-to-go-hw/internal/api/request"
 
 	"github.com/ew0s/ewos-to-go-hw/pkg/httputils"
@@ -27,14 +25,12 @@ type PrivateChatting interface {
 type PrivateChatHandler struct {
 	service      PrivateChatting
 	userIdentity *middleware.UserIdentity
-	validate     *validator.Validate
 }
 
 func NewPrivateChatHandler(service PrivateChatting, userIdentity *middleware.UserIdentity) *PrivateChatHandler {
 	return &PrivateChatHandler{
 		service:      service,
 		userIdentity: userIdentity,
-		validate:     validator.New(),
 	}
 }
 
@@ -75,7 +71,7 @@ func (h *PrivateChatHandler) SendPrivateMessage(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	err = h.ValidateMessage(req)
+	err = req.Validate()
 	if err != nil {
 		baseresponse.RenderErr(w, r, http.StatusBadRequest, err)
 		return
@@ -198,13 +194,4 @@ func (h *PrivateChatHandler) ShowUsersWithMessages(w http.ResponseWriter, r *htt
 		baseresponse.RenderErr(w, r, http.StatusInternalServerError, handlers.ErrorSomeServer)
 		return
 	}
-}
-
-func (h *PrivateChatHandler) ValidateMessage(req request.MessageRequest) error {
-	err := h.validate.Struct(req)
-	if err != nil {
-		return err
-	}
-
-	return nil
 }
