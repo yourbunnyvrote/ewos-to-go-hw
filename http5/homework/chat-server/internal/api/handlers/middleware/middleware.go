@@ -55,14 +55,12 @@ func (h *UserIdentity) Identify(next http.Handler) http.Handler {
 
 		credentials := mapper.MakeEntityAuthCredentials(authCredentials[0], authCredentials[1])
 
-		err = credentials.Validate()
-		if err != nil {
+		if err = credentials.Validate(); err != nil {
 			baseresponse.RenderErr(w, r, http.StatusUnauthorized, err)
 			return
 		}
 
-		err = h.service.Identify(credentials)
-		if err != nil {
+		if err = h.service.Identify(credentials); err != nil {
 			baseresponse.RenderErr(w, r, http.StatusUnauthorized, err)
 			return
 		}

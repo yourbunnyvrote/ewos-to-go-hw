@@ -66,36 +66,32 @@ func (h *PublicChatHandler) Routes() chi.Router {
 func (h *PublicChatHandler) SendPublicMessage(w http.ResponseWriter, r *http.Request) {
 	var req request.SendPublicMessageRequest
 
-	err := httputils.DecodeRequestBody(r, &req)
-	if err != nil {
+	if err := httputils.DecodeRequestBody(r, &req); err != nil {
 		baseresponse.RenderErr(w, r, http.StatusBadRequest, err)
 		return
 	}
 
-	err = req.Validate()
-	if err != nil {
+	if err := req.Validate(); err != nil {
 		baseresponse.RenderErr(w, r, http.StatusBadRequest, err)
 		return
 	}
 
 	credentials, ok := r.Context().Value(private_message.RouteContextCredentials).(entities.AuthCredentials)
 	if !ok {
-		baseresponse.RenderErr(w, r, http.StatusInternalServerError, handlers.ErrorSomeServer)
+		baseresponse.RenderErr(w, r, http.StatusInternalServerError, handlers.ErrRetrievingDataContext)
 		return
 	}
 
 	msg := mapper.MakeEntityMessage(credentials.Login, req.Content)
 
-	err = h.service.SendPublicMessage(msg)
-	if err != nil {
+	if err := h.service.SendPublicMessage(msg); err != nil {
 		baseresponse.RenderErr(w, r, http.StatusBadRequest, err)
 		return
 	}
 
 	response := mapper.MakeSendPublicMessageResponse(msg)
 
-	err = baseresponse.SendResponse(w, http.StatusOK, response)
-	if err != nil {
+	if err := baseresponse.SendResponse(w, http.StatusOK, response); err != nil {
 		baseresponse.RenderErr(w, r, http.StatusInternalServerError, err)
 		return
 	}
@@ -119,7 +115,7 @@ func (h *PublicChatHandler) SendPublicMessage(w http.ResponseWriter, r *http.Req
 func (h *PublicChatHandler) ShowPublicMessage(w http.ResponseWriter, r *http.Request) {
 	messages, err := h.service.GetPublicMessages()
 	if err != nil {
-		baseresponse.RenderErr(w, r, http.StatusInternalServerError, handlers.ErrorSomeServer)
+		baseresponse.RenderErr(w, r, http.StatusInternalServerError, err)
 		return
 	}
 
@@ -133,9 +129,8 @@ func (h *PublicChatHandler) ShowPublicMessage(w http.ResponseWriter, r *http.Req
 
 	response := mapper.MakeShowPublicMessagesResponse(pageMessages)
 
-	err = baseresponse.SendResponse(w, http.StatusOK, response)
-	if err != nil {
-		baseresponse.RenderErr(w, r, http.StatusInternalServerError, handlers.ErrorSomeServer)
+	if err = baseresponse.SendResponse(w, http.StatusOK, response); err != nil {
+		baseresponse.RenderErr(w, r, http.StatusInternalServerError, err)
 		return
 	}
 }

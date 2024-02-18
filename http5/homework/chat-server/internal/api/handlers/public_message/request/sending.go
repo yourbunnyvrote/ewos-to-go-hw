@@ -9,8 +9,7 @@ type SendPublicMessageRequest struct {
 func (mr *SendPublicMessageRequest) Validate() error {
 	validate := validator.New()
 
-	err := validate.Struct(mr)
-	if err != nil {
+	if err := validate.Struct(mr); err != nil {
 		return err
 	}
 

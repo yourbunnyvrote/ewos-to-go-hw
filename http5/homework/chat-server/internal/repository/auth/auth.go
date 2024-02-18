@@ -35,9 +35,7 @@ func (a *Repository) CreateUser(credentials entities.AuthCredentials) error {
 		return repository.ErrDataError
 	}
 
-	_, exists := users[credentials.Login]
-
-	if exists {
+	if _, exists := users[credentials.Login]; exists {
 		return repository.ErrUserAlreadyExists
 	}
 

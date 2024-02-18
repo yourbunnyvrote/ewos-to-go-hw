@@ -68,44 +68,40 @@ func (h *PrivateChatHandler) Routes() chi.Router {
 func (h *PrivateChatHandler) SendPrivateMessage(w http.ResponseWriter, r *http.Request) {
 	var req request.SendPrivateMessageRequest
 
-	err := httputils.DecodeRequestBody(r, &req)
-	if err != nil {
+	if err := httputils.DecodeRequestBody(r, &req); err != nil {
 		baseresponse.RenderErr(w, r, http.StatusBadRequest, err)
 		return
 	}
 
-	err = req.Validate()
-	if err != nil {
+	if err := req.Validate(); err != nil {
 		baseresponse.RenderErr(w, r, http.StatusBadRequest, err)
 		return
 	}
 
 	receiver := r.URL.Query().Get(UsernameQueryParameter)
-	if receiver == "" {
-		baseresponse.RenderErr(w, r, http.StatusBadRequest, handlers.ErrEmptyReceiver)
-	}
 
 	sender, ok := r.Context().Value(RouteContextCredentials).(entities.AuthCredentials)
 	if !ok {
-		baseresponse.RenderErr(w, r, http.StatusInternalServerError, handlers.ErrorSomeServer)
+		baseresponse.RenderErr(w, r, http.StatusInternalServerError, handlers.ErrRetrievingDataContext)
 		return
 	}
 
 	chat := mapper.MakeChatMetadata(receiver, sender.Login)
+	if err := chat.Validate(); err != nil {
+		baseresponse.RenderErr(w, r, http.StatusBadRequest, err)
+	}
 
 	msg := mapper.MakeEntityMessage(sender.Login, req.Content)
 
-	err = h.service.SendPrivateMessage(chat, msg)
-	if err != nil {
+	if err := h.service.SendPrivateMessage(chat, msg); err != nil {
 		baseresponse.RenderErr(w, r, http.StatusBadRequest, err)
 		return
 	}
 
 	response := mapper.MakeSendPrivateMessageResponse(msg)
 
-	err = baseresponse.SendResponse(w, http.StatusOK, response)
-	if err != nil {
-		baseresponse.RenderErr(w, r, http.StatusInternalServerError, handlers.ErrorSomeServer)
+	if err := baseresponse.SendResponse(w, http.StatusOK, response); err != nil {
+		baseresponse.RenderErr(w, r, http.StatusInternalServerError, err)
 		return
 	}
 }
@@ -134,14 +130,13 @@ func (h *PrivateChatHandler) ShowPrivateMessages(w http.ResponseWriter, r *http.
 
 	sender, ok := r.Context().Value(RouteContextCredentials).(entities.AuthCredentials)
 	if !ok {
-		baseresponse.RenderErr(w, r, http.StatusInternalServerError, handlers.ErrorSomeServer)
+		baseresponse.RenderErr(w, r, http.StatusInternalServerError, handlers.ErrRetrievingDataContext)
 		return
 	}
 
 	req := mapper.MakeShowPrivateMessageRequest(receiver, sender.Login)
 
-	err := req.Validate()
-	if err != nil {
+	if err := req.Validate(); err != nil {
 		baseresponse.RenderErr(w, r, http.StatusBadRequest, handlers.ErrEmptyReceiver)
 	}
 
@@ -163,8 +158,7 @@ func (h *PrivateChatHandler) ShowPrivateMessages(w http.ResponseWriter, r *http.
 
 	response := mapper.MakeShowPrivateMessageResponse(pageMessages)
 
-	err = baseresponse.SendResponse(w, http.StatusOK, response)
-	if err != nil {
+	if err = baseresponse.SendResponse(w, http.StatusOK, response); err != nil {
 		baseresponse.RenderErr(w, r, http.StatusInternalServerError, err)
 		return
 	}
@@ -186,7 +180,7 @@ func (h *PrivateChatHandler) ShowPrivateMessages(w http.ResponseWriter, r *http.
 func (h *PrivateChatHandler) ShowUsersWithMessages(w http.ResponseWriter, r *http.Request) {
 	user, ok := r.Context().Value(RouteContextCredentials).(entities.AuthCredentials)
 	if !ok {
-		baseresponse.RenderErr(w, r, http.StatusInternalServerError, handlers.ErrorSomeServer)
+		baseresponse.RenderErr(w, r, http.StatusInternalServerError, handlers.ErrRetrievingDataContext)
 		return
 	}
 
@@ -194,15 +188,14 @@ func (h *PrivateChatHandler) ShowUsersWithMessages(w http.ResponseWriter, r *htt
 
 	usersList, err := h.service.GetUsersWithMessage(req.Username)
 	if err != nil {
-		baseresponse.RenderErr(w, r, http.StatusInternalServerError, handlers.ErrorSomeServer)
+		baseresponse.RenderErr(w, r, http.StatusInternalServerError, err)
 		return
 	}
 
 	response := mapper.MakeUserListResponse(usersList)
 
-	err = baseresponse.SendResponse(w, http.StatusOK, response)
-	if err != nil {
-		baseresponse.RenderErr(w, r, http.StatusInternalServerError, handlers.ErrorSomeServer)
+	if err = baseresponse.SendResponse(w, http.StatusOK, response); err != nil {
+		baseresponse.RenderErr(w, r, http.StatusInternalServerError, err)
 		return
 	}
 }

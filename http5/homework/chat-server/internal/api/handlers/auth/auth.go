@@ -52,30 +52,26 @@ func (h *Handler) Routes() chi.Router {
 func (h *Handler) Registration(w http.ResponseWriter, r *http.Request) {
 	var req request.RegistrationRequest
 
-	err := httputils.DecodeRequestBody(r, &req)
-	if err != nil {
+	if err := httputils.DecodeRequestBody(r, &req); err != nil {
 		baseresponse.RenderErr(w, r, http.StatusBadRequest, err)
 		return
 	}
 
-	err = req.Validate()
-	if err != nil {
+	if err := req.Validate(); err != nil {
 		baseresponse.RenderErr(w, r, http.StatusBadRequest, err)
 		return
 	}
 
 	credentials := mapper.MakeEntityAuthCredentials(req.Username, req.Password)
 
-	err = h.service.CreateUser(credentials)
-	if err != nil {
+	if err := h.service.CreateUser(credentials); err != nil {
 		baseresponse.RenderErr(w, r, http.StatusBadRequest, err)
 		return
 	}
 
 	response := mapper.MakeAuthResponse(credentials)
 
-	err = baseresponse.SendResponse(w, http.StatusCreated, response)
-	if err != nil {
+	if err := baseresponse.SendResponse(w, http.StatusCreated, response); err != nil {
 		baseresponse.RenderErr(w, r, http.StatusInternalServerError, err)
 		return
 	}

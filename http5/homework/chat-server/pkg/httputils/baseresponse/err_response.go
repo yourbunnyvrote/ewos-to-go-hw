@@ -29,8 +29,7 @@ func (e *ErrResponse) Render(_ http.ResponseWriter, r *http.Request) error {
 func RenderErr(w http.ResponseWriter, r *http.Request, statusCode int, err error) {
 	respErr := NewErrResponse(err, statusCode)
 
-	errRender := render.Render(w, r, respErr)
-	if errRender != nil {
+	if errRender := render.Render(w, r, respErr); errRender != nil {
 		http.Error(w, "render error", http.StatusInternalServerError)
 	}
 }

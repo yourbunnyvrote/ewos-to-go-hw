@@ -15,8 +15,7 @@ func GetPaginateParameters(r *http.Request) (entities.PaginateParam, error) {
 		return entities.PaginateParam{}, err
 	}
 
-	err = parameters.Validate()
-	if err != nil {
+	if err = parameters.Validate(); err != nil {
 		return entities.PaginateParam{}, err
 	}
 

@@ -20,8 +20,7 @@ func SendResponse(w http.ResponseWriter, statusCode int, response interface{}) e
 		return ErrorMarshalResponse
 	}
 
-	_, err = w.Write(resp)
-	if err != nil {
+	if _, err = w.Write(resp); err != nil {
 		return ErrorWriteResponse
 	}
 

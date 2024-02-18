@@ -10,8 +10,7 @@ type PaginateParam struct {
 func (p PaginateParam) Validate() error {
 	validate := validator.New()
 
-	err := validate.Struct(p)
-	if err != nil {
+	if err := validate.Struct(p); err != nil {
 		return err
 	}
 

@@ -6,11 +6,10 @@ type SendPrivateMessageRequest struct {
 	Content string `json:"content" validate:"required"`
 }
 
-func (mr *SendPrivateMessageRequest) Validate() error {
+func (r *SendPrivateMessageRequest) Validate() error {
 	validate := validator.New()
 
-	err := validate.Struct(mr)
-	if err != nil {
+	if err := validate.Struct(r); err != nil {
 		return err
 	}
 

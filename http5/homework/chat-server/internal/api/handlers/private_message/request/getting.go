@@ -10,8 +10,7 @@ type ShowPrivateMessageRequest struct {
 func (r ShowPrivateMessageRequest) Validate() error {
 	validate := validator.New()
 
-	err := validate.Struct(r)
-	if err != nil {
+	if err := validate.Struct(r); err != nil {
 		return err
 	}
 
