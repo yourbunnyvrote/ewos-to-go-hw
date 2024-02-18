@@ -1,6 +1,8 @@
-package handlers
+package private_message
 
 import (
+	"github.com/ew0s/ewos-to-go-hw/internal/api/handlers"
+	"github.com/ew0s/ewos-to-go-hw/internal/api/handlers/middleware"
 	"net/http"
 
 	"github.com/go-playground/validator/v10"
@@ -24,11 +26,11 @@ type PrivateChatting interface {
 
 type PrivateChatHandler struct {
 	service      PrivateChatting
-	userIdentity *UserIdentity
+	userIdentity *middleware.UserIdentity
 	validate     *validator.Validate
 }
 
-func NewPrivateChatHandler(service PrivateChatting, userIdentity *UserIdentity) *PrivateChatHandler {
+func NewPrivateChatHandler(service PrivateChatting, userIdentity *middleware.UserIdentity) *PrivateChatHandler {
 	return &PrivateChatHandler{
 		service:      service,
 		userIdentity: userIdentity,
@@ -63,7 +65,7 @@ func (h *PrivateChatHandler) Routes() chi.Router {
 //	@Failure		401	{string}	string				"Unauthorized: Missing or invalid API key"
 //	@Failure		500	{string}	string				"Failed to retrieve data from the query context"
 //	@Failure		500	{string}	string				"JSON encoding error"
-//	@Router			/messages/private [post]
+//	@Router			/v1/messages/private [post]
 func (h *PrivateChatHandler) SendPrivateMessage(w http.ResponseWriter, r *http.Request) {
 	var req request.TextMessage
 
@@ -79,14 +81,14 @@ func (h *PrivateChatHandler) SendPrivateMessage(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	receiver := r.URL.Query().Get(UsernameQueryParameter)
+	receiver := r.URL.Query().Get(handlers.UsernameQueryParameter)
 	if receiver == "" {
-		baseresponse.RenderErr(w, r, http.StatusBadRequest, ErrorEmptyReceiver)
+		baseresponse.RenderErr(w, r, http.StatusBadRequest, handlers.ErrorEmptyReceiver)
 	}
 
-	sender, ok := r.Context().Value(RouteContextUsernameValue).(string)
+	sender, ok := r.Context().Value(handlers.RouteContextUsernameValue).(string)
 	if !ok {
-		baseresponse.RenderErr(w, r, http.StatusInternalServerError, ErrorSomeServer)
+		baseresponse.RenderErr(w, r, http.StatusInternalServerError, handlers.ErrorSomeServer)
 		return
 	}
 
@@ -102,7 +104,7 @@ func (h *PrivateChatHandler) SendPrivateMessage(w http.ResponseWriter, r *http.R
 
 	err = baseresponse.SendResponse(w, http.StatusOK, msg)
 	if err != nil {
-		baseresponse.RenderErr(w, r, http.StatusInternalServerError, ErrorSomeServer)
+		baseresponse.RenderErr(w, r, http.StatusInternalServerError, handlers.ErrorSomeServer)
 		return
 	}
 }
@@ -125,16 +127,16 @@ func (h *PrivateChatHandler) SendPrivateMessage(w http.ResponseWriter, r *http.R
 //	@Failure		404	{string}	string				"There is no dialog with such a person"
 //	@Failure		500	{string}	string				"Failed to retrieve data from the query context"
 //	@Failure		500	{string}	string				"JSON encoding error"
-//	@Router			/messages/private [get]
+//	@Router			/v1/messages/private [get]
 func (h *PrivateChatHandler) ShowPrivateMessages(w http.ResponseWriter, r *http.Request) {
-	receiver := r.URL.Query().Get(UsernameQueryParameter)
+	receiver := r.URL.Query().Get(handlers.UsernameQueryParameter)
 	if receiver == "" {
-		baseresponse.RenderErr(w, r, http.StatusBadRequest, ErrorEmptyReceiver)
+		baseresponse.RenderErr(w, r, http.StatusBadRequest, handlers.ErrorEmptyReceiver)
 	}
 
-	sender, ok := r.Context().Value(RouteContextUsernameValue).(string)
+	sender, ok := r.Context().Value(handlers.RouteContextUsernameValue).(string)
 	if !ok {
-		baseresponse.RenderErr(w, r, http.StatusInternalServerError, ErrorSomeServer)
+		baseresponse.RenderErr(w, r, http.StatusInternalServerError, handlers.ErrorSomeServer)
 		return
 	}
 
@@ -146,7 +148,7 @@ func (h *PrivateChatHandler) ShowPrivateMessages(w http.ResponseWriter, r *http.
 		return
 	}
 
-	params, err := getPaginateParameters(r)
+	params, err := handlers.GetPaginateParameters(r)
 	if err != nil {
 		baseresponse.RenderErr(w, r, http.StatusBadRequest, err)
 		return
@@ -173,23 +175,23 @@ func (h *PrivateChatHandler) ShowPrivateMessages(w http.ResponseWriter, r *http.
 //	@Failure		401	{string}	string		"Unauthorized: Missing or invalid API key"
 //	@Failure		500	{string}	string		"Failed to retrieve data from the query context"
 //	@Failure		500	{string}	string		"JSON encoding error"
-//	@Router			/messages/private/users [get]
+//	@Router			/v1/messages/private/users [get]
 func (h *PrivateChatHandler) ShowUsersWithMessages(w http.ResponseWriter, r *http.Request) {
-	username, ok := r.Context().Value(RouteContextUsernameValue).(string)
+	username, ok := r.Context().Value(handlers.RouteContextUsernameValue).(string)
 	if !ok {
-		baseresponse.RenderErr(w, r, http.StatusInternalServerError, ErrorSomeServer)
+		baseresponse.RenderErr(w, r, http.StatusInternalServerError, handlers.ErrorSomeServer)
 		return
 	}
 
 	usersList, err := h.service.GetUsersWithMessage(username)
 	if err != nil {
-		baseresponse.RenderErr(w, r, http.StatusInternalServerError, ErrorSomeServer)
+		baseresponse.RenderErr(w, r, http.StatusInternalServerError, handlers.ErrorSomeServer)
 		return
 	}
 
 	err = baseresponse.SendResponse(w, http.StatusOK, usersList)
 	if err != nil {
-		baseresponse.RenderErr(w, r, http.StatusInternalServerError, ErrorSomeServer)
+		baseresponse.RenderErr(w, r, http.StatusInternalServerError, handlers.ErrorSomeServer)
 		return
 	}
 }

@@ -7,7 +7,7 @@ import (
 	"github.com/ew0s/ewos-to-go-hw/internal/domain/entities"
 )
 
-func getPaginateParameters(r *http.Request) (entities.PaginateParam, error) {
+func GetPaginateParameters(r *http.Request) (entities.PaginateParam, error) {
 	limit, offset := getQueryPaginateParam(r)
 
 	parameters, err := makePaginateParam(limit, offset)

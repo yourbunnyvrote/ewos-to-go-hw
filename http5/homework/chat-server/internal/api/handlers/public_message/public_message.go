@@ -1,6 +1,8 @@
-package handlers
+package public_message
 
 import (
+	"github.com/ew0s/ewos-to-go-hw/internal/api/handlers"
+	"github.com/ew0s/ewos-to-go-hw/internal/api/handlers/middleware"
 	"net/http"
 
 	"github.com/go-playground/validator/v10"
@@ -24,11 +26,11 @@ type PublicChatting interface {
 
 type PublicChatHandler struct {
 	service      PublicChatting
-	userIdentity *UserIdentity
+	userIdentity *middleware.UserIdentity
 	validate     *validator.Validate
 }
 
-func NewPublicChatHandler(service PublicChatting, userIdentity *UserIdentity) *PublicChatHandler {
+func NewPublicChatHandler(service PublicChatting, userIdentity *middleware.UserIdentity) *PublicChatHandler {
 	return &PublicChatHandler{
 		service:      service,
 		userIdentity: userIdentity,
@@ -60,7 +62,7 @@ func (h *PublicChatHandler) Routes() chi.Router {
 //	@Failure		400	{string}	string				"Bad Request: Send public message error"
 //	@Failure		401	{string}	string				"Unauthorized: Missing or invalid API key"
 //	@Failure		500	{string}	string				"JSON encoding error"
-//	@Router			/messages/public [post]
+//	@Router			/v1/messages/public [post]
 func (h *PublicChatHandler) SendPublicMessage(w http.ResponseWriter, r *http.Request) {
 	var req request.TextMessage
 
@@ -76,9 +78,9 @@ func (h *PublicChatHandler) SendPublicMessage(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	username, ok := r.Context().Value(RouteContextUsernameValue).(string)
+	username, ok := r.Context().Value(handlers.RouteContextUsernameValue).(string)
 	if !ok {
-		baseresponse.RenderErr(w, r, http.StatusInternalServerError, ErrorSomeServer)
+		baseresponse.RenderErr(w, r, http.StatusInternalServerError, handlers.ErrorSomeServer)
 		return
 	}
 
@@ -111,15 +113,15 @@ func (h *PublicChatHandler) SendPublicMessage(w http.ResponseWriter, r *http.Req
 //	@Failure		400	{string}	string				"Invalid paginate parameters"
 //	@Failure		401	{string}	string				"Unauthorized: Missing or invalid API key"
 //	@Failure		500	{string}	string				"Bad Request: Get public messages error"
-//	@Router			/messages/public [get]
+//	@Router			/v1/messages/public [get]
 func (h *PublicChatHandler) ShowPublicMessage(w http.ResponseWriter, r *http.Request) {
 	messages, err := h.service.GetPublicMessages()
 	if err != nil {
-		baseresponse.RenderErr(w, r, http.StatusInternalServerError, ErrorSomeServer)
+		baseresponse.RenderErr(w, r, http.StatusInternalServerError, handlers.ErrorSomeServer)
 		return
 	}
 
-	params, err := getPaginateParameters(r)
+	params, err := handlers.GetPaginateParameters(r)
 	if err != nil {
 		baseresponse.RenderErr(w, r, http.StatusBadRequest, err)
 		return
@@ -129,7 +131,7 @@ func (h *PublicChatHandler) ShowPublicMessage(w http.ResponseWriter, r *http.Req
 
 	err = baseresponse.SendResponse(w, http.StatusOK, pageMessages)
 	if err != nil {
-		baseresponse.RenderErr(w, r, http.StatusInternalServerError, ErrorSomeServer)
+		baseresponse.RenderErr(w, r, http.StatusInternalServerError, handlers.ErrorSomeServer)
 		return
 	}
 }

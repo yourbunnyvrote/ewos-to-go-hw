@@ -2,7 +2,18 @@ package main
 
 import (
 	"context"
+	"github.com/ew0s/ewos-to-go-hw/internal/api/handlers/auth"
+	"github.com/ew0s/ewos-to-go-hw/internal/api/handlers/middleware"
+	"github.com/ew0s/ewos-to-go-hw/internal/api/handlers/private_message"
+	"github.com/ew0s/ewos-to-go-hw/internal/api/handlers/public_message"
+	auth2 "github.com/ew0s/ewos-to-go-hw/internal/repository/auth"
+	privateMessage2 "github.com/ew0s/ewos-to-go-hw/internal/repository/private_message"
+	publicMessage2 "github.com/ew0s/ewos-to-go-hw/internal/repository/public_message"
+	auth3 "github.com/ew0s/ewos-to-go-hw/internal/service/auth"
+	privateMessage3 "github.com/ew0s/ewos-to-go-hw/internal/service/private_message"
+	publicMessage3 "github.com/ew0s/ewos-to-go-hw/internal/service/public_message"
 	"log"
+	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
@@ -10,15 +21,11 @@ import (
 	"github.com/ew0s/ewos-to-go-hw/pkg/api"
 	"github.com/ew0s/ewos-to-go-hw/pkg/httputils/server"
 
-	"github.com/ew0s/ewos-to-go-hw/internal/api/handlers"
 	"github.com/go-chi/chi"
 	httpSwagger "github.com/swaggo/http-swagger"
 
 	_ "github.com/ew0s/ewos-to-go-hw/docs"
 	"github.com/ew0s/ewos-to-go-hw/internal/database"
-
-	"github.com/ew0s/ewos-to-go-hw/internal/repository"
-	"github.com/ew0s/ewos-to-go-hw/internal/service"
 )
 
 //	@title			Chat API
@@ -26,7 +33,7 @@ import (
 //	@description	API Server for Chat Application
 
 //	@host		localhost:8080
-//	@BasePath	/v1
+//	@BasePath	/
 
 // @securityDefinitions.basic	BasicAuth
 // @in							header
@@ -34,32 +41,35 @@ import (
 func main() {
 	chatDB := database.NewChatDB()
 
-	chatRepo := repository.NewRepository(chatDB)
+	authRepo := auth2.NewRepository(chatDB)
+	privateMessageRepo := privateMessage2.NewRepository(chatDB)
+	publicMessageRepo := publicMessage2.NewRepository(chatDB)
 
-	chatService := service.NewService(chatRepo)
+	authService := auth3.NewService(authRepo)
+	privateMessageService := privateMessage3.NewService(privateMessageRepo)
+	publicMessageService := publicMessage3.NewService(publicMessageRepo)
 
-	userIdentity := handlers.NewUserIdentity(chatService.Auth)
-
-	authHandler := handlers.NewAuthHandler(chatService.Auth)
-	publicChatHandler := handlers.NewPublicChatHandler(chatService.Chat, userIdentity)
-	privateChatHandler := handlers.NewPrivateChatHandler(chatService.Chat, userIdentity)
+	authHandler := auth.NewHandler(authService)
+	userIdentity := middleware.NewUserIdentity(authService)
+	privateChatHandler := private_message.NewPrivateChatHandler(privateMessageService, userIdentity)
+	publicChatHandler := public_message.NewPublicChatHandler(publicMessageService, userIdentity)
 
 	routers := map[string]chi.Router{
-		"/auth":             authHandler.Routes(),
-		"/messages/public":  publicChatHandler.Routes(),
-		"/messages/private": privateChatHandler.Routes(),
+		AuthEndpoint:           authHandler.Routes(),
+		PublicMessageEndpoint:  publicChatHandler.Routes(),
+		PrivateMessageEndpoint: privateChatHandler.Routes(),
 	}
 
-	r := api.MakeRoutes("/v1", routers)
+	r := api.MakeRoutes(AppVersion, routers)
 
-	r.Get("/swagger/*", httpSwagger.Handler(
-		httpSwagger.URL("doc.json"),
+	r.Get(SwaggerEndpoint, httpSwagger.Handler(
+		httpSwagger.URL(DocJSONPath),
 	))
 
 	serv := new(server.ChatServer)
 
 	go func() {
-		if err := serv.Run("8080", r); err != nil {
+		if err := serv.Run(ServerPort, r); err != nil && err != http.ErrServerClosed {
 			log.Fatalf("error running chat server: %s", err)
 		}
 	}()
@@ -69,6 +79,10 @@ func main() {
 	<-stop
 
 	if err := serv.Shutdown(context.Background()); err != nil {
-		log.Fatalf("error shutting down server: %s", err)
+		if err != http.ErrServerClosed {
+			log.Fatalf("error shutting down server: %s", err)
+		} else {
+			log.Println("server shut down gracefully")
+		}
 	}
 }

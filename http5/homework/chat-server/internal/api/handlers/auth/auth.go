@@ -1,4 +1,4 @@
-package handlers
+package auth
 
 import (
 	"net/http"
@@ -16,25 +16,24 @@ import (
 	"github.com/ew0s/ewos-to-go-hw/internal/domain/entities"
 )
 
-type AuthService interface {
+type Service interface {
 	CreateUser(user entities.User) (string, error)
 	GetUser(username string) (entities.User, error)
-	Identify(user entities.AuthCredentials) error
 }
 
-type AuthHandler struct {
-	service  AuthService
+type Handler struct {
+	service  Service
 	validate *validator.Validate
 }
 
-func NewAuthHandler(service AuthService) *AuthHandler {
-	return &AuthHandler{
+func NewHandler(service Service) *Handler {
+	return &Handler{
 		service:  service,
 		validate: validator.New(),
 	}
 }
 
-func (h *AuthHandler) Routes() chi.Router {
+func (h *Handler) Routes() chi.Router {
 	r := chi.NewRouter()
 
 	r.Post("/sign-up", h.Registration)
@@ -54,8 +53,8 @@ func (h *AuthHandler) Routes() chi.Router {
 //	@Failure		400		{string}	string			"Invalid request body"
 //	@Failure		400		{string}	string			"Create user error"
 //	@Failure		500		{string}	string			"JSON encoding error"
-//	@Router			/auth/sign-up [post]
-func (h *AuthHandler) Registration(w http.ResponseWriter, r *http.Request) {
+//	@Router			/v1/auth/sign-up [post]
+func (h *Handler) Registration(w http.ResponseWriter, r *http.Request) {
 	var req request.User
 
 	err := httputils.DecodeRequestBody(r, &req)
@@ -85,7 +84,7 @@ func (h *AuthHandler) Registration(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *AuthHandler) ValidateUser(req request.User) error {
+func (h *Handler) ValidateUser(req request.User) error {
 	err := h.validate.Struct(req)
 	if err != nil {
 		return err
