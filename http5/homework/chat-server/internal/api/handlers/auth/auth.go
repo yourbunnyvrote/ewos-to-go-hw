@@ -43,7 +43,7 @@ func (h *Handler) Routes() chi.Router {
 //	@Tags			auth
 //	@Accept			json
 //	@Produce		json
-//	@Param			user	body		request.User	true	"User object for registration"
+//	@Param			user	body		request.RegistrationRequest	true	"User object for registration"
 //	@Success		201		{object}	string			"User successfully registered"
 //	@Failure		400		{string}	string			"Invalid request body"
 //	@Failure		400		{string}	string			"Create user error"

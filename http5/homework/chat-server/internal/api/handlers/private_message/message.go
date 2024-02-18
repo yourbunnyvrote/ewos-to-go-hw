@@ -55,10 +55,10 @@ func (h *PrivateChatHandler) Routes() chi.Router {
 //	@Tags			messages
 //	@Accept			json
 //	@Produce		json
-//	@Param			text		body	request.TextMessage	true	"Text message object for sending private message"
+//	@Param			text		body	request.SendPrivateMessageRequest	true	"Text message object for sending private message"
 //	@Param			username	query	string				true	"Username of the message receiver"
 //	@Security		BasicAuth
-//	@Success		200	{object}	entities.Message	"Message successfully sent"
+//	@Success		200	{object}	response.SendPrivateMessageResponse	"Message successfully sent"
 //	@Failure		400	{string}	string				"Bad Request: Invalid request body or missing receiver"
 //	@Failure		400	{string}	string				"Bad Request: Send private message error"
 //	@Failure		401	{string}	string				"Unauthorized: Missing or invalid API key"
@@ -117,7 +117,7 @@ func (h *PrivateChatHandler) SendPrivateMessage(w http.ResponseWriter, r *http.R
 //	@Param			offset		query	integer	true	"Start number for pagination (positive integer)"
 //	@Param			username	query	string	true	"Username of the message receiver"
 //	@Security		BasicAuth
-//	@Success		200	{object}	[]entities.Message	"List of private messages"
+//	@Success		200	{object}	response.ShowPrivateMessagesResponse	"List of private messages"
 //	@Failure		400	{string}	string				"Missing receiver"
 //	@Failure		400	{string}	string				"Invalid paginate parameters"
 //	@Failure		401	{string}	string				"Unauthorized: Missing or invalid API key"
@@ -172,7 +172,7 @@ func (h *PrivateChatHandler) ShowPrivateMessages(w http.ResponseWriter, r *http.
 //	@Accept			json
 //	@Produce		json
 //	@Security		BasicAuth
-//	@Success		200	{object}	[]string	"List of usernames with received private messages"
+//	@Success		200	{object}	response.ShowUsersWithMessagesResponse	"List of usernames with received private messages"
 //	@Failure		401	{string}	string		"Unauthorized: Missing or invalid API key"
 //	@Failure		500	{string}	string		"Failed to retrieve data from the query context"
 //	@Failure		500	{string}	string		"JSON encoding error"

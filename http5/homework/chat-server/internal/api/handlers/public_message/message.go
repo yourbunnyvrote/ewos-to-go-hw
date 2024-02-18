@@ -55,9 +55,9 @@ func (h *PublicChatHandler) Routes() chi.Router {
 //	@Tags			messages
 //	@Accept			json
 //	@Produce		json
-//	@Param			text	body	request.TextMessage	true	"Text message object for sending public message"
+//	@Param			text	body	request.SendPublicMessageRequest	true	"Text message object for sending public message"
 //	@Security		BasicAuth
-//	@Success		200	{object}	entities.Message	"Message successfully sent"
+//	@Success		200	{object}	response.SendPublicMessagesResponse	"Message successfully sent"
 //	@Failure		400	{string}	string				"Bad Request: Invalid request body"
 //	@Failure		400	{string}	string				"Bad Request: Send public message error"
 //	@Failure		401	{string}	string				"Unauthorized: Missing or invalid API key"
@@ -107,7 +107,7 @@ func (h *PublicChatHandler) SendPublicMessage(w http.ResponseWriter, r *http.Req
 //	@Param			limit	query	integer	true	"Limit number for pagination (positive integer)"
 //	@Param			offset	query	integer	true	"Start number for pagination (positive integer)"
 //	@Security		BasicAuth
-//	@Success		200	{object}	[]entities.Message	"List of public messages"
+//	@Success		200	{object}	response.ShowPublicMessageResponse	"List of public messages"
 //	@Failure		400	{string}	string				"Invalid paginate parameters"
 //	@Failure		401	{string}	string				"Unauthorized: Missing or invalid API key"
 //	@Failure		500	{string}	string				"Bad Request: Get public messages error"
