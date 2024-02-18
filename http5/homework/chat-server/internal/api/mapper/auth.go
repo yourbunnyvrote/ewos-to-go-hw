@@ -12,8 +12,8 @@ func MakeEntityAuthCredentials(login, password string) entities.AuthCredentials 
 	}
 }
 
-func MakeResponseAuthCredentials(credentials entities.AuthCredentials) resposne.AuthCredentialsResponse {
-	return resposne.AuthCredentialsResponse{
-		Login: credentials.Login,
+func MakeAuthResponse(credentials entities.AuthCredentials) resposne.AuthResponse {
+	return resposne.AuthResponse{
+		Username: credentials.Login,
 	}
 }

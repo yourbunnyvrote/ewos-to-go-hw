@@ -23,7 +23,7 @@ func NewRepository(db InMemoryDB) *Repository {
 	}
 }
 
-func (pc *Repository) SendPrivateMessage(chat entities.UsersPair, msg entities.Message) error {
+func (pc *Repository) SendPrivateMessage(chat entities.ChatMetadata, msg entities.Message) error {
 	pc.mu.Lock()
 	defer pc.mu.Unlock()
 
@@ -31,11 +31,11 @@ func (pc *Repository) SendPrivateMessage(chat entities.UsersPair, msg entities.M
 
 	chats, ok := publicChat.(repository.PrivateChatsData)
 	if !ok {
-		return repository.ErrorDataError
+		return repository.ErrDataError
 	}
 
-	if chat.User1 < chat.User2 {
-		chat.User1, chat.User2 = chat.User2, chat.User1
+	if chat.Username1 < chat.Username2 {
+		chat.Username1, chat.Username2 = chat.Username2, chat.Username1
 	}
 
 	chats[chat] = append(chats[chat], msg)
@@ -43,7 +43,7 @@ func (pc *Repository) SendPrivateMessage(chat entities.UsersPair, msg entities.M
 	return nil
 }
 
-func (pc *Repository) GetPrivateMessages(chat entities.UsersPair) ([]entities.Message, error) {
+func (pc *Repository) GetPrivateMessages(chat entities.ChatMetadata) ([]entities.Message, error) {
 	pc.mu.RLock()
 	defer pc.mu.RUnlock()
 
@@ -51,11 +51,11 @@ func (pc *Repository) GetPrivateMessages(chat entities.UsersPair) ([]entities.Me
 
 	chats, ok := privateChat.(repository.PrivateChatsData)
 	if !ok {
-		return nil, repository.ErrorDataError
+		return nil, repository.ErrDataError
 	}
 
-	if chat.User1 < chat.User2 {
-		chat.User1, chat.User2 = chat.User2, chat.User1
+	if chat.Username1 < chat.Username2 {
+		chat.Username1, chat.Username2 = chat.Username2, chat.Username1
 	}
 
 	messages := chats[chat]
@@ -71,17 +71,17 @@ func (pc *Repository) GetUsersWithMessage(username string) ([]string, error) {
 
 	chats, ok := publicChat.(repository.PrivateChatsData)
 	if !ok {
-		return nil, repository.ErrorDataError
+		return nil, repository.ErrDataError
 	}
 
 	listUsers := make([]string, 0)
 
 	for key := range chats {
-		if key.User1 == username || key.User2 == username {
-			if key.User1 == username {
-				listUsers = append(listUsers, key.User2)
+		if key.Username1 == username || key.Username2 == username {
+			if key.Username1 == username {
+				listUsers = append(listUsers, key.Username2)
 			} else {
-				listUsers = append(listUsers, key.User1)
+				listUsers = append(listUsers, key.Username1)
 			}
 		}
 	}

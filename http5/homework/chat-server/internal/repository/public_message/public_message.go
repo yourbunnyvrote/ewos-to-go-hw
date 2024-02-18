@@ -31,7 +31,7 @@ func (r *Repository) SendPublicMessage(msg entities.Message) error {
 
 	messages, ok := publicChat.(repository.PublicChatsData)
 	if !ok {
-		return repository.ErrorDataError
+		return repository.ErrDataError
 	}
 
 	messages = append(messages, msg)
@@ -46,7 +46,7 @@ func (r *Repository) GetPublicMessages() ([]entities.Message, error) {
 
 	messages, ok := publicChat.(repository.PublicChatsData)
 	if !ok {
-		return nil, repository.ErrorDataError
+		return nil, repository.ErrDataError
 	}
 
 	return messages, nil

@@ -2,6 +2,7 @@ package public_message
 
 import (
 	"github.com/ew0s/ewos-to-go-hw/internal/api/handlers"
+	handlersMapper "github.com/ew0s/ewos-to-go-hw/internal/api/handlers/mapper"
 	"github.com/ew0s/ewos-to-go-hw/internal/api/handlers/middleware"
 	"net/http"
 
@@ -119,7 +120,7 @@ func (h *PublicChatHandler) ShowPublicMessage(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	params, err := handlers.GetPaginateParameters(r)
+	params, err := handlersMapper.GetPaginateParameters(r)
 	if err != nil {
 		baseresponse.RenderErr(w, r, http.StatusBadRequest, err)
 		return

@@ -24,7 +24,7 @@ func NewRepository(db InMemoryDB) *Repository {
 	}
 }
 
-func (a *Repository) CreateUser(user entities.User) (string, error) {
+func (a *Repository) CreateUser(credentials entities.AuthCredentials) error {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 
@@ -32,21 +32,21 @@ func (a *Repository) CreateUser(user entities.User) (string, error) {
 
 	users, ok := usersData.(repository.UsersData)
 	if !ok {
-		return "", repository.ErrorDataError
+		return repository.ErrDataError
 	}
 
-	_, exists := users[user.Username]
+	_, exists := users[credentials.Login]
 
 	if exists {
-		return "", repository.ErrorUserAlreadyExists
+		return repository.ErrUserAlreadyExists
 	}
 
-	users[user.Username] = user
+	users[credentials.Login] = credentials
 
-	return user.Username, nil
+	return nil
 }
 
-func (a *Repository) GetUser(username string) (entities.User, error) {
+func (a *Repository) GetUser(username string) (entities.AuthCredentials, error) {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
 
@@ -54,13 +54,13 @@ func (a *Repository) GetUser(username string) (entities.User, error) {
 
 	users, ok := usersData.(repository.UsersData)
 	if !ok {
-		return entities.User{}, repository.ErrorDataError
+		return entities.AuthCredentials{}, repository.ErrDataError
 	}
 
 	findUser, exist := users[username]
 
 	if !exist {
-		return entities.User{}, repository.ErrorUserNotFound
+		return entities.AuthCredentials{}, repository.ErrUserNotFound
 	}
 
 	return findUser, nil

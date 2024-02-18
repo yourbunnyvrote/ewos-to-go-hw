@@ -6,8 +6,8 @@ import (
 )
 
 type Authorization interface {
-	CreateUser(user entities.User) (string, error)
-	GetUser(username string) (entities.User, error)
+	CreateUser(user entities.AuthCredentials) error
+	GetUser(username string) (entities.AuthCredentials, error)
 }
 
 type Service struct {
@@ -20,11 +20,11 @@ func NewService(repos Authorization) *Service {
 	}
 }
 
-func (as *Service) CreateUser(user entities.User) (string, error) {
-	return as.repos.CreateUser(user)
+func (as *Service) CreateUser(credentials entities.AuthCredentials) error {
+	return as.repos.CreateUser(credentials)
 }
 
-func (as *Service) GetUser(username string) (entities.User, error) {
+func (as *Service) GetUser(username string) (entities.AuthCredentials, error) {
 	return as.repos.GetUser(username)
 }
 

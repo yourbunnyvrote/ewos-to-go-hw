@@ -1,5 +1,5 @@
 package resposne
 
-type UserResponse struct {
+type AuthResponse struct {
 	Username string `json:"username"`
 }

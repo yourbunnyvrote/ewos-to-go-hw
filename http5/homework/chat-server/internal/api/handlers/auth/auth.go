@@ -15,8 +15,8 @@ import (
 )
 
 type Service interface {
-	CreateUser(user entities.User) error
-	GetUser(username string) (entities.User, error)
+	CreateUser(user entities.AuthCredentials) error
+	GetUser(username string) (entities.AuthCredentials, error)
 }
 
 type Handler struct {
@@ -65,15 +65,15 @@ func (h *Handler) Registration(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user := mapper.MakeEntityUser(req.Username, req.Password)
+	credentials := mapper.MakeEntityAuthCredentials(req.Username, req.Password)
 
-	err = h.service.CreateUser(user)
+	err = h.service.CreateUser(credentials)
 	if err != nil {
 		baseresponse.RenderErr(w, r, http.StatusBadRequest, err)
 		return
 	}
 
-	response := mapper.MakeUserResponse(user)
+	response := mapper.MakeAuthResponse(credentials)
 
 	err = baseresponse.SendResponse(w, http.StatusCreated, response)
 	if err != nil {

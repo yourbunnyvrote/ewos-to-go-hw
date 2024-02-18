@@ -2,6 +2,7 @@ package private_message
 
 import (
 	"github.com/ew0s/ewos-to-go-hw/internal/api/handlers"
+	handlersMapper "github.com/ew0s/ewos-to-go-hw/internal/api/handlers/mapper"
 	"github.com/ew0s/ewos-to-go-hw/internal/api/handlers/middleware"
 	"net/http"
 
@@ -79,18 +80,18 @@ func (h *PrivateChatHandler) SendPrivateMessage(w http.ResponseWriter, r *http.R
 
 	receiver := r.URL.Query().Get(handlers.UsernameQueryParameter)
 	if receiver == "" {
-		baseresponse.RenderErr(w, r, http.StatusBadRequest, handlers.ErrorEmptyReceiver)
+		baseresponse.RenderErr(w, r, http.StatusBadRequest, handlers.ErrEmptyReceiver)
 	}
 
-	sender, ok := r.Context().Value(handlers.RouteContextUsernameValue).(string)
+	sender, ok := r.Context().Value(handlers.RouteContextCredentials).(entities.AuthCredentials)
 	if !ok {
 		baseresponse.RenderErr(w, r, http.StatusInternalServerError, handlers.ErrorSomeServer)
 		return
 	}
 
-	chat := mapper.MakeChatMetadata(receiver, sender)
+	chat := mapper.MakeChatMetadata(receiver, sender.Login)
 
-	msg := mapper.MakeEntityMessage(sender, req.Content)
+	msg := mapper.MakeEntityMessage(sender.Login, req.Content)
 
 	err = h.service.SendPrivateMessage(chat, msg)
 	if err != nil {
@@ -129,16 +130,16 @@ func (h *PrivateChatHandler) SendPrivateMessage(w http.ResponseWriter, r *http.R
 func (h *PrivateChatHandler) ShowPrivateMessages(w http.ResponseWriter, r *http.Request) {
 	receiver := r.URL.Query().Get(handlers.UsernameQueryParameter)
 	if receiver == "" {
-		baseresponse.RenderErr(w, r, http.StatusBadRequest, handlers.ErrorEmptyReceiver)
+		baseresponse.RenderErr(w, r, http.StatusBadRequest, handlers.ErrEmptyReceiver)
 	}
 
-	sender, ok := r.Context().Value(handlers.RouteContextUsernameValue).(string)
+	sender, ok := r.Context().Value(handlers.RouteContextCredentials).(entities.AuthCredentials)
 	if !ok {
 		baseresponse.RenderErr(w, r, http.StatusInternalServerError, handlers.ErrorSomeServer)
 		return
 	}
 
-	chat := mapper.MakeChatMetadata(receiver, sender)
+	chat := mapper.MakeChatMetadata(receiver, sender.Login)
 
 	messages, err := h.service.GetPrivateMessages(chat)
 	if err != nil {
@@ -146,7 +147,7 @@ func (h *PrivateChatHandler) ShowPrivateMessages(w http.ResponseWriter, r *http.
 		return
 	}
 
-	params, err := handlers.GetPaginateParameters(r)
+	params, err := handlersMapper.GetPaginateParameters(r)
 	if err != nil {
 		baseresponse.RenderErr(w, r, http.StatusBadRequest, err)
 		return
@@ -177,19 +178,21 @@ func (h *PrivateChatHandler) ShowPrivateMessages(w http.ResponseWriter, r *http.
 //	@Failure		500	{string}	string		"JSON encoding error"
 //	@Router			/v1/messages/private/users [get]
 func (h *PrivateChatHandler) ShowUsersWithMessages(w http.ResponseWriter, r *http.Request) {
-	username, ok := r.Context().Value(handlers.RouteContextUsernameValue).(string)
+	user, ok := r.Context().Value(handlers.RouteContextCredentials).(entities.AuthCredentials)
 	if !ok {
 		baseresponse.RenderErr(w, r, http.StatusInternalServerError, handlers.ErrorSomeServer)
 		return
 	}
 
-	usersList, err := h.service.GetUsersWithMessage(username)
+	usersList, err := h.service.GetUsersWithMessage(user.Login)
 	if err != nil {
 		baseresponse.RenderErr(w, r, http.StatusInternalServerError, handlers.ErrorSomeServer)
 		return
 	}
 
-	err = baseresponse.SendResponse(w, http.StatusOK, usersList)
+	response := mapper.MakeUserListResponse(usersList)
+
+	err = baseresponse.SendResponse(w, http.StatusOK, response)
 	if err != nil {
 		baseresponse.RenderErr(w, r, http.StatusInternalServerError, handlers.ErrorSomeServer)
 		return

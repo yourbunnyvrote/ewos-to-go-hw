@@ -35,31 +35,31 @@ func (h *UserIdentity) Identify(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		authHeader := r.Header.Get("Authorization")
 		if authHeader == "" {
-			baseresponse.RenderErr(w, r, http.StatusUnauthorized, handlers.ErrorUnauthorized)
+			baseresponse.RenderErr(w, r, http.StatusUnauthorized, handlers.ErrUnauthorized)
 			return
 		}
 
 		authParts := strings.Fields(authHeader)
 		if len(authParts) != 2 || authParts[0] != "Basic" {
-			baseresponse.RenderErr(w, r, http.StatusUnauthorized, handlers.ErrorUnauthorized)
+			baseresponse.RenderErr(w, r, http.StatusUnauthorized, handlers.ErrUnauthorized)
 			return
 		}
 
 		decodedAuth, err := base64.StdEncoding.DecodeString(authParts[1])
 		if err != nil {
-			baseresponse.RenderErr(w, r, http.StatusUnauthorized, handlers.ErrorUnauthorized)
+			baseresponse.RenderErr(w, r, http.StatusUnauthorized, handlers.ErrUnauthorized)
 			return
 		}
 
 		authCredentials := strings.Split(string(decodedAuth), ":")
 		if len(authCredentials) != handlers.CountCredentials {
-			baseresponse.RenderErr(w, r, http.StatusUnauthorized, handlers.ErrorUnauthorized)
+			baseresponse.RenderErr(w, r, http.StatusUnauthorized, handlers.ErrUnauthorized)
 			return
 		}
 
 		credentials := mapper.MakeEntityAuthCredentials(authCredentials[0], authCredentials[1])
 
-		err = h.ValidateCredentials(credentials)
+		err = credentials.Validate()
 		if err != nil {
 			baseresponse.RenderErr(w, r, http.StatusUnauthorized, err)
 			return
@@ -71,19 +71,9 @@ func (h *UserIdentity) Identify(next http.Handler) http.Handler {
 			return
 		}
 
-		ctx := context.WithValue(r.Context(), handlers.RouteContextUsernameValue, credentials.Login)
-		ctx = context.WithValue(ctx, handlers.RouteContextPasswordValue, credentials.Password)
+		ctx := context.WithValue(r.Context(), handlers.RouteContextCredentials, credentials)
 		r = r.WithContext(ctx)
 
 		next.ServeHTTP(w, r)
 	})
-}
-
-func (h *UserIdentity) ValidateCredentials(credentials entities.AuthCredentials) error {
-	err := h.validate.Struct(credentials)
-	if err != nil {
-		return err
-	}
-
-	return nil
 }

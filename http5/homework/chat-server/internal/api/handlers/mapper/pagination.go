@@ -1,33 +1,26 @@
-package handlers
+package mapper
 
 import (
+	"github.com/ew0s/ewos-to-go-hw/internal/domain/entities"
 	"net/http"
 	"strconv"
-
-	"github.com/ew0s/ewos-to-go-hw/internal/domain/entities"
 )
 
 func GetPaginateParameters(r *http.Request) (entities.PaginateParam, error) {
-	limit, offset := getQueryPaginateParam(r)
+	limit := r.URL.Query().Get(LimitQueryParameter)
+	offset := r.URL.Query().Get(OffsetQueryParameter)
 
 	parameters, err := makePaginateParam(limit, offset)
 	if err != nil {
 		return entities.PaginateParam{}, err
 	}
 
-	err = checkPaginateParam(parameters)
+	err = parameters.Validate()
 	if err != nil {
 		return entities.PaginateParam{}, err
 	}
 
 	return parameters, nil
-}
-
-func getQueryPaginateParam(r *http.Request) (limit, offset string) {
-	limit = r.URL.Query().Get(LimitQueryParameter)
-	offset = r.URL.Query().Get(OffsetQueryParameter)
-
-	return limit, offset
 }
 
 func makePaginateParam(limit, offset string) (entities.PaginateParam, error) {
@@ -47,12 +40,4 @@ func makePaginateParam(limit, offset string) (entities.PaginateParam, error) {
 	}
 
 	return parameters, nil
-}
-
-func checkPaginateParam(param entities.PaginateParam) error {
-	if param.Limit < 0 || param.Offset < 0 {
-		return ErrorPaginateParameters
-	}
-
-	return nil
 }
