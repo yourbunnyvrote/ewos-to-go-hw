@@ -84,7 +84,7 @@ func (h *PublicChatHandler) SendPublicMessage(w http.ResponseWriter, r *http.Req
 	msg := mapper.MakeEntityMessage(credentials.Login, req.Content)
 
 	if err := h.service.SendPublicMessage(msg); err != nil {
-		baseresponse.RenderErr(w, r, http.StatusBadRequest, err)
+		baseresponse.RenderErr(w, r, http.StatusInternalServerError, err)
 		return
 	}
 

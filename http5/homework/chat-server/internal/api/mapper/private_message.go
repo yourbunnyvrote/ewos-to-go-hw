@@ -13,7 +13,20 @@ func MakeShowPrivateMessageRequest(receiver, sender string) request.ShowPrivateM
 	}
 }
 
-func MakeShowPrivateMessageResponse(messages []entities.Message) response.ShowPrivateMessagesResponse {
+func MakeMessagesResponse(messages []entities.Message) []response.Message {
+	result := make([]response.Message, len(messages))
+
+	for i, msg := range messages {
+		result[i] = response.Message{
+			Username: msg.Username,
+			Content:  msg.Content,
+		}
+	}
+
+	return result
+}
+
+func MakeShowPrivateMessageResponse(messages []response.Message) response.ShowPrivateMessagesResponse {
 	return response.ShowPrivateMessagesResponse{
 		Messages: messages,
 	}

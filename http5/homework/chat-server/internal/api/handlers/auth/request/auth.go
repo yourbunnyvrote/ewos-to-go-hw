@@ -7,8 +7,6 @@ type RegistrationRequest struct {
 	Password string `json:"password" validate:"required"`
 }
 
-func (u RegistrationRequest) Validate() error {
-	validate := validator.New()
-
+func (u RegistrationRequest) Validate(validate *validator.Validate) error {
 	return validate.Struct(u)
 }

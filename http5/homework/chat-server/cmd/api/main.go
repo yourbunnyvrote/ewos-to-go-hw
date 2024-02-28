@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"errors"
+	"github.com/ew0s/ewos-to-go-hw/cmd/api/consts"
 	"log"
 	"net/http"
 	"os"
@@ -49,27 +50,27 @@ func main() {
 	privateMessageService := servicePrivateMessage.NewService(privateMessageRepo)
 	publicMessageService := servicePublicMessage.NewService(publicMessageRepo)
 
-	authHandler := auth.NewHandler(authService)
+	authHandler := auth.NewAuthHandler(authService)
 	userIdentity := middleware.NewUserIdentity(authService)
 	privateChatHandler := private_message.NewPrivateChatHandler(privateMessageService, userIdentity)
 	publicChatHandler := public_message.NewPublicChatHandler(publicMessageService, userIdentity)
 
 	routers := map[string]chi.Router{
-		AuthEndpoint:           authHandler.Routes(),
-		PublicMessageEndpoint:  publicChatHandler.Routes(),
-		PrivateMessageEndpoint: privateChatHandler.Routes(),
+		consts.AuthEndpoint:           authHandler.Routes(),
+		consts.PublicMessageEndpoint:  publicChatHandler.Routes(),
+		consts.PrivateMessageEndpoint: privateChatHandler.Routes(),
 	}
 
-	r := api.MakeRoutes(AppVersion, routers)
+	r := api.MakeRoutes(consts.AppVersion, routers)
 
-	r.Get(SwaggerEndpoint, httpSwagger.Handler(
-		httpSwagger.URL(DocJSONPath),
+	r.Get(consts.SwaggerEndpoint, httpSwagger.Handler(
+		httpSwagger.URL(consts.DocJSONPath),
 	))
 
 	serv := new(server.ChatServer)
 
 	go func() {
-		if err := serv.Run(ServerPort, r); err != nil && !errors.Is(err, http.ErrServerClosed) {
+		if err := serv.Run(consts.ServerPort, r); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			log.Fatalf("error running chat server: %s", err)
 		}
 	}()

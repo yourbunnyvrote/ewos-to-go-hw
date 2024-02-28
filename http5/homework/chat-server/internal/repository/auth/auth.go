@@ -7,8 +7,9 @@ import (
 	"github.com/ew0s/ewos-to-go-hw/internal/repository"
 )
 
+type UsersData map[string]entities.AuthCredentials
+
 type InMemoryDB interface {
-	Insert(key string, value interface{})
 	Get(key string) interface{}
 }
 
@@ -28,15 +29,15 @@ func (a *Repository) CreateUser(credentials entities.AuthCredentials) error {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 
-	usersData := a.db.Get("users")
+	usersData := a.db.Get(DBKey)
 
-	users, ok := usersData.(repository.UsersData)
+	users, ok := usersData.(UsersData)
 	if !ok {
 		return repository.ErrDataError
 	}
 
 	if _, exists := users[credentials.Login]; exists {
-		return repository.ErrUserAlreadyExists
+		return ErrUserAlreadyExists
 	}
 
 	users[credentials.Login] = credentials
@@ -48,9 +49,9 @@ func (a *Repository) GetUser(username string) (entities.AuthCredentials, error) 
 	a.mu.RLock()
 	defer a.mu.RUnlock()
 
-	usersData := a.db.Get("users")
+	usersData := a.db.Get(DBKey)
 
-	users, ok := usersData.(repository.UsersData)
+	users, ok := usersData.(UsersData)
 	if !ok {
 		return entities.AuthCredentials{}, repository.ErrDataError
 	}
@@ -58,7 +59,7 @@ func (a *Repository) GetUser(username string) (entities.AuthCredentials, error) 
 	findUser, exist := users[username]
 
 	if !exist {
-		return entities.AuthCredentials{}, repository.ErrUserNotFound
+		return entities.AuthCredentials{}, ErrUserNotFound
 	}
 
 	return findUser, nil

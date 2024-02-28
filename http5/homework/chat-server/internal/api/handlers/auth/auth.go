@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"github.com/go-playground/validator/v10"
 	"net/http"
 
 	"github.com/ew0s/ewos-to-go-hw/internal/api/handlers/auth/request"
@@ -17,17 +18,18 @@ type AuthService interface {
 	GetUser(username string) (entities.AuthCredentials, error)
 }
 
-type Handler struct {
-	service AuthService
+type AuthHandler struct {
+	service  AuthService
+	validate *validator.Validate
 }
 
-func NewHandler(service AuthService) *Handler {
-	return &Handler{
+func NewAuthHandler(service AuthService) *AuthHandler {
+	return &AuthHandler{
 		service: service,
 	}
 }
 
-func (h *Handler) Routes() *chi.Mux {
+func (h *AuthHandler) Routes() *chi.Mux {
 	r := chi.NewRouter()
 
 	r.Post("/sign-up", h.Registration)
@@ -48,7 +50,7 @@ func (h *Handler) Routes() *chi.Mux {
 //	@Failure		400		{string}	string			"Create user error"
 //	@Failure		500		{string}	string			"JSON encoding error"
 //	@Router			/v1/auth/sign-up [post]
-func (h *Handler) Registration(w http.ResponseWriter, r *http.Request) {
+func (h *AuthHandler) Registration(w http.ResponseWriter, r *http.Request) {
 	var req request.RegistrationRequest
 
 	if err := httputils.DecodeRequestBody(r, &req); err != nil {
@@ -56,7 +58,7 @@ func (h *Handler) Registration(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := req.Validate(); err != nil {
+	if err := req.Validate(h.validate); err != nil {
 		baseresponse.RenderErr(w, r, http.StatusBadRequest, err)
 		return
 	}
@@ -64,7 +66,7 @@ func (h *Handler) Registration(w http.ResponseWriter, r *http.Request) {
 	credentials := mapper.MakeEntityAuthCredentials(req.Username, req.Password)
 
 	if err := h.service.CreateUser(credentials); err != nil {
-		baseresponse.RenderErr(w, r, http.StatusBadRequest, err)
+		baseresponse.RenderErr(w, r, http.StatusInternalServerError, err)
 		return
 	}
 

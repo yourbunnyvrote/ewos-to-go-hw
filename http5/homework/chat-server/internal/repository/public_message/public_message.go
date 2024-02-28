@@ -7,6 +7,8 @@ import (
 	"github.com/ew0s/ewos-to-go-hw/internal/repository"
 )
 
+type PublicChatsData []entities.Message
+
 type InMemoryDB interface {
 	Insert(key string, value interface{})
 	Get(key string) interface{}
@@ -28,24 +30,24 @@ func (r *Repository) SendPublicMessage(msg entities.Message) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
-	publicChat := r.db.Get("public chats")
+	publicChat := r.db.Get(DBKey)
 
-	messages, ok := publicChat.(repository.PublicChatsData)
+	messages, ok := publicChat.(PublicChatsData)
 	if !ok {
 		return repository.ErrDataError
 	}
 
 	messages = append(messages, msg)
 
-	r.db.Insert("public chats", messages)
+	r.db.Insert(DBKey, messages)
 
 	return nil
 }
 
 func (r *Repository) GetPublicMessages() ([]entities.Message, error) {
-	publicChat := r.db.Get("public chats")
+	publicChat := r.db.Get(DBKey)
 
-	messages, ok := publicChat.(repository.PublicChatsData)
+	messages, ok := publicChat.(PublicChatsData)
 	if !ok {
 		return nil, repository.ErrDataError
 	}

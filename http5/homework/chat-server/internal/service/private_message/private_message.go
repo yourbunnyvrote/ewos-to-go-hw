@@ -21,6 +21,10 @@ func (cs *Service) SendPrivateMessage(chat entities.ChatMetadata, msg entities.M
 }
 
 func (cs *Service) GetPrivateMessages(chat entities.ChatMetadata) ([]entities.Message, error) {
+	if chat.Username1 < chat.Username2 {
+		chat.Username1, chat.Username2 = chat.Username2, chat.Username1
+	}
+
 	return cs.repos.GetPrivateMessages(chat)
 }
 
