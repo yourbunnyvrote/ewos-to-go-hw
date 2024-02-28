@@ -42,7 +42,6 @@ func (pc *Repository) SendPrivateMessage(chat entities.ChatMetadata, msg entitie
 }
 
 func (pc *Repository) GetPrivateChats() (map[entities.ChatMetadata][]entities.Message, error) {
-
 	privateChat := pc.db.Get(DBKey)
 
 	chats, ok := privateChat.(PrivateChatsData)

@@ -6,10 +6,17 @@ import (
 	"github.com/ew0s/ewos-to-go-hw/internal/domain/entities"
 )
 
-func MakeEntityAuthCredentials(credentials request.AuthCredentials) entities.AuthCredentials {
+func MakeAuthCredentialsRequest(login, password string) request.AuthCredentials {
+	return request.AuthCredentials{
+		Login:    login,
+		Password: password,
+	}
+}
+
+func MakeEntityAuthCredentials(login, password string) entities.AuthCredentials {
 	return entities.AuthCredentials{
-		Login:    credentials.Login,
-		Password: credentials.Password,
+		Login:    login,
+		Password: password,
 	}
 }
 

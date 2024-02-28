@@ -1,7 +1,6 @@
 package auth
 
 import (
-	"github.com/go-playground/validator/v10"
 	"net/http"
 
 	"github.com/ew0s/ewos-to-go-hw/internal/api/handlers/auth/request"
@@ -11,6 +10,7 @@ import (
 	"github.com/ew0s/ewos-to-go-hw/pkg/httputils/baseresponse"
 
 	"github.com/go-chi/chi"
+	"github.com/go-playground/validator/v10"
 )
 
 type AuthService interface {
@@ -23,9 +23,10 @@ type AuthHandler struct {
 	validate *validator.Validate
 }
 
-func NewAuthHandler(service AuthService) *AuthHandler {
+func NewAuthHandler(service AuthService, validate *validator.Validate) *AuthHandler {
 	return &AuthHandler{
-		service: service,
+		service:  service,
+		validate: validate,
 	}
 }
 

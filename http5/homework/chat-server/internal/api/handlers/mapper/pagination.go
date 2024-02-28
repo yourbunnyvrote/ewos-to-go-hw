@@ -7,37 +7,35 @@ import (
 	"github.com/ew0s/ewos-to-go-hw/internal/domain/entities"
 )
 
-func GetPaginateParameters(r *http.Request) (entities.PaginateParam, error) {
-	limit := r.URL.Query().Get(LimitQueryParameter)
-	offset := r.URL.Query().Get(OffsetQueryParameter)
-
-	parameters, err := makePaginateParam(limit, offset)
-	if err != nil {
-		return entities.PaginateParam{}, err
+func MakePaginateParam(limit, offset int) entities.PaginateParam {
+	return entities.PaginateParam{
+		Limit:  limit,
+		Offset: offset,
 	}
-
-	if err = parameters.Validate(); err != nil {
-		return entities.PaginateParam{}, err
-	}
-
-	return parameters, nil
 }
 
-func makePaginateParam(limit, offset string) (entities.PaginateParam, error) {
-	var (
-		parameters entities.PaginateParam
-		err        error
-	)
+func GetPaginateParameters(r *http.Request) (limit, offset int, err error) {
+	limitStr := r.URL.Query().Get(LimitQueryParameter)
+	offsetStr := r.URL.Query().Get(OffsetQueryParameter)
 
-	parameters.Limit, err = strconv.Atoi(limit)
+	limit, offset, err = atoiPaginateParam(limitStr, offsetStr)
 	if err != nil {
-		return entities.PaginateParam{}, err
+		return limit, offset, err
 	}
 
-	parameters.Offset, err = strconv.Atoi(offset)
+	return limit, offset, nil
+}
+
+func atoiPaginateParam(limitStr, offsetStr string) (limit, offset int, err error) {
+	limit, err = strconv.Atoi(limitStr)
 	if err != nil {
-		return entities.PaginateParam{}, err
+		return limit, offset, err
 	}
 
-	return parameters, nil
+	offset, err = strconv.Atoi(offsetStr)
+	if err != nil {
+		return 0, 0, err
+	}
+
+	return limit, offset, nil
 }

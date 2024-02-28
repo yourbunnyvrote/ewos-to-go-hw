@@ -3,13 +3,13 @@ package main
 import (
 	"context"
 	"errors"
-	"github.com/ew0s/ewos-to-go-hw/cmd/api/consts"
 	"log"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 
+	"github.com/ew0s/ewos-to-go-hw/cmd/api/consts"
 	_ "github.com/ew0s/ewos-to-go-hw/docs"
 	"github.com/ew0s/ewos-to-go-hw/internal/api/handlers/auth"
 	"github.com/ew0s/ewos-to-go-hw/internal/api/handlers/middleware"
@@ -26,6 +26,7 @@ import (
 	"github.com/ew0s/ewos-to-go-hw/pkg/httputils/server"
 
 	"github.com/go-chi/chi"
+	"github.com/go-playground/validator/v10"
 	httpSwagger "github.com/swaggo/http-swagger"
 )
 
@@ -40,6 +41,8 @@ import (
 // @in							header
 // @name						Authorization
 func main() {
+	validate := validator.New()
+
 	chatDB := database.NewChatDB()
 
 	authRepo := reposAuth.NewRepository(chatDB)
@@ -50,10 +53,10 @@ func main() {
 	privateMessageService := servicePrivateMessage.NewService(privateMessageRepo)
 	publicMessageService := servicePublicMessage.NewService(publicMessageRepo)
 
-	authHandler := auth.NewAuthHandler(authService)
+	authHandler := auth.NewAuthHandler(authService, validate)
 	userIdentity := middleware.NewUserIdentity(authService)
-	privateChatHandler := private_message.NewPrivateChatHandler(privateMessageService, userIdentity)
-	publicChatHandler := public_message.NewPublicChatHandler(publicMessageService, userIdentity)
+	privateChatHandler := private_message.NewPrivateChatHandler(privateMessageService, userIdentity, validate)
+	publicChatHandler := public_message.NewPublicChatHandler(publicMessageService, userIdentity, validate)
 
 	routers := map[string]chi.Router{
 		consts.AuthEndpoint:           authHandler.Routes(),

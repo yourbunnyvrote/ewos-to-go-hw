@@ -7,8 +7,6 @@ type SendPrivateMessageRequest struct {
 	Receiver string `validate:"required"`
 }
 
-func (r *SendPrivateMessageRequest) Validate() error {
-	validate := validator.New()
-
+func (r *SendPrivateMessageRequest) Validate(validate *validator.Validate) error {
 	return validate.Struct(r)
 }

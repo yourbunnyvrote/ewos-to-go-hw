@@ -13,6 +13,7 @@ import (
 	"github.com/ew0s/ewos-to-go-hw/pkg/httputils/baseresponse"
 
 	"github.com/go-chi/chi"
+	"github.com/go-playground/validator/v10"
 )
 
 type PublicMessageService interface {
@@ -27,12 +28,14 @@ type Identity interface {
 type PublicChatHandler struct {
 	service      PublicMessageService
 	userIdentity Identity
+	validate     *validator.Validate
 }
 
-func NewPublicChatHandler(service PublicMessageService, userIdentity Identity) *PublicChatHandler {
+func NewPublicChatHandler(service PublicMessageService, userIdentity Identity, validate *validator.Validate) *PublicChatHandler {
 	return &PublicChatHandler{
 		service:      service,
 		userIdentity: userIdentity,
+		validate:     validate,
 	}
 }
 
@@ -69,7 +72,7 @@ func (h *PublicChatHandler) SendPublicMessage(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	if err := req.Validate(); err != nil {
+	if err := req.Validate(h.validate); err != nil {
 		baseresponse.RenderErr(w, r, http.StatusBadRequest, err)
 		return
 	}
@@ -111,11 +114,13 @@ func (h *PublicChatHandler) SendPublicMessage(w http.ResponseWriter, r *http.Req
 //	@Failure		500	{string}	string				"Bad Request: Get public messages error"
 //	@Router			/v1/messages/public [get]
 func (h *PublicChatHandler) ShowPublicMessage(w http.ResponseWriter, r *http.Request) {
-	params, err := handlersMapper.GetPaginateParameters(r)
+	limit, offset, err := handlersMapper.GetPaginateParameters(r)
 	if err != nil {
 		baseresponse.RenderErr(w, r, http.StatusBadRequest, err)
 		return
 	}
+
+	params := handlersMapper.MakePaginateParam(limit, offset)
 
 	pageMessages, err := h.service.GetPublicMessages(params)
 	if err != nil {

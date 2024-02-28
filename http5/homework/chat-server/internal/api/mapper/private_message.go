@@ -6,10 +6,12 @@ import (
 	"github.com/ew0s/ewos-to-go-hw/internal/domain/entities"
 )
 
-func MakeShowPrivateMessageRequest(receiver, sender string) request.ShowPrivateMessageRequest {
+func MakeShowPrivateMessageRequest(receiver, sender string, limit, offset int) request.ShowPrivateMessageRequest {
 	return request.ShowPrivateMessageRequest{
 		Receiver: receiver,
 		Sender:   sender,
+		Limit:    limit,
+		Offset:   offset,
 	}
 }
 

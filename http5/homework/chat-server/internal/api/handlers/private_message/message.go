@@ -12,13 +12,13 @@ import (
 	"github.com/ew0s/ewos-to-go-hw/pkg/httputils/baseresponse"
 
 	"github.com/go-chi/chi"
+	"github.com/go-playground/validator/v10"
 )
 
 type PrivateMessageService interface {
 	SendPrivateMessage(chat entities.ChatMetadata, msg entities.Message) error
 	GetPrivateMessages(chat entities.ChatMetadata, params entities.PaginateParam) ([]entities.Message, error)
 	GetUsersWithMessage(receiver string) ([]string, error)
-	//PaginateMessages(messages []entities.Message, param entities.PaginateParam) []entities.Message
 }
 
 type Identity interface {
@@ -28,12 +28,14 @@ type Identity interface {
 type PrivateChatHandler struct {
 	service      PrivateMessageService
 	userIdentity Identity
+	validate     *validator.Validate
 }
 
-func NewPrivateChatHandler(service PrivateMessageService, userIdentity Identity) *PrivateChatHandler {
+func NewPrivateChatHandler(service PrivateMessageService, userIdentity Identity, validate *validator.Validate) *PrivateChatHandler {
 	return &PrivateChatHandler{
 		service:      service,
 		userIdentity: userIdentity,
+		validate:     validate,
 	}
 }
 
@@ -75,7 +77,7 @@ func (h *PrivateChatHandler) SendPrivateMessage(w http.ResponseWriter, r *http.R
 
 	req.Receiver = r.URL.Query().Get(UsernameQueryParameter)
 
-	if err := req.Validate(); err != nil {
+	if err := req.Validate(h.validate); err != nil {
 		baseresponse.RenderErr(w, r, http.StatusBadRequest, err)
 		return
 	}
@@ -130,20 +132,21 @@ func (h *PrivateChatHandler) ShowPrivateMessages(w http.ResponseWriter, r *http.
 		return
 	}
 
-	req := mapper.MakeShowPrivateMessageRequest(receiver, sender.Login)
+	limit, offset, err := handlersMapper.GetPaginateParameters(r)
+	if err != nil {
+		baseresponse.RenderErr(w, r, http.StatusBadRequest, err)
+		return
+	}
 
-	if err := req.Validate(); err != nil {
+	req := mapper.MakeShowPrivateMessageRequest(receiver, sender.Login, limit, offset)
+
+	if err := req.Validate(h.validate); err != nil {
 		baseresponse.RenderErr(w, r, http.StatusBadRequest, handlers.ErrEmptyReceiver)
 		return
 	}
 
 	chatMetadata := mapper.MakeChatMetadata(receiver, sender.Login)
-
-	params, err := handlersMapper.GetPaginateParameters(r)
-	if err != nil {
-		baseresponse.RenderErr(w, r, http.StatusBadRequest, err)
-		return
-	}
+	params := handlersMapper.MakePaginateParam(limit, offset)
 
 	pageMessages, err := h.service.GetPrivateMessages(chatMetadata, params)
 	if err != nil {

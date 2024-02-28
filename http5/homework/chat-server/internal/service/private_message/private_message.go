@@ -1,6 +1,9 @@
 package private_message
 
-import "github.com/ew0s/ewos-to-go-hw/internal/domain/entities"
+import (
+	"github.com/ew0s/ewos-to-go-hw/internal/domain/entities"
+	"github.com/ew0s/ewos-to-go-hw/internal/service/message"
+)
 
 type PrivateMessageRepo interface {
 	SendPrivateMessage(chat entities.ChatMetadata, msg entities.Message) error
@@ -33,7 +36,7 @@ func (cs *Service) GetPrivateMessages(chat entities.ChatMetadata, params entitie
 		chat.Username1, chat.Username2 = chat.Username2, chat.Username1
 	}
 
-	pageMessages := PaginateMessages(privateChatsData[chat], params)
+	pageMessages := message.PaginateMessages(privateChatsData[chat], params)
 
 	return pageMessages, nil
 }
@@ -56,19 +59,4 @@ func (cs *Service) GetUsersWithMessage(receiver string) ([]string, error) {
 	}
 
 	return listUsers, nil
-}
-
-func PaginateMessages(messages []entities.Message, params entities.PaginateParam) []entities.Message {
-	startIndex := params.Offset
-	endIndex := startIndex + params.Limit
-
-	if endIndex > len(messages) {
-		endIndex = len(messages)
-	}
-
-	if startIndex > len(messages) {
-		startIndex = len(messages)
-	}
-
-	return messages[startIndex:endIndex]
 }
