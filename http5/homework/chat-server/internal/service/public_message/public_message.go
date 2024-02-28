@@ -4,7 +4,7 @@ import "github.com/ew0s/ewos-to-go-hw/internal/domain/entities"
 
 type PublicMessageRepo interface {
 	SendPublicMessage(msg entities.Message) error
-	GetPublicMessages() ([]entities.Message, error)
+	GetPublicChat() ([]entities.Message, error)
 }
 
 type Service struct {
@@ -19,11 +19,18 @@ func (cs *Service) SendPublicMessage(msg entities.Message) error {
 	return cs.repos.SendPublicMessage(msg)
 }
 
-func (cs *Service) GetPublicMessages() ([]entities.Message, error) {
-	return cs.repos.GetPublicMessages()
+func (cs *Service) GetPublicMessages(params entities.PaginateParam) ([]entities.Message, error) {
+	publicChat, err := cs.repos.GetPublicChat()
+	if err != nil {
+		return nil, err
+	}
+
+	pageMessages := PaginateMessages(publicChat, params)
+
+	return pageMessages, nil
 }
 
-func (*Service) PaginateMessages(messages []entities.Message, params entities.PaginateParam) []entities.Message {
+func PaginateMessages(messages []entities.Message, params entities.PaginateParam) []entities.Message {
 	startIndex := params.Offset
 	endIndex := startIndex + params.Limit
 

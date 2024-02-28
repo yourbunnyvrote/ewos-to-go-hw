@@ -17,8 +17,7 @@ import (
 
 type PublicMessageService interface {
 	SendPublicMessage(msg entities.Message) error
-	GetPublicMessages() ([]entities.Message, error)
-	PaginateMessages(messages []entities.Message, params entities.PaginateParam) []entities.Message
+	GetPublicMessages(params entities.PaginateParam) ([]entities.Message, error)
 }
 
 type Identity interface {
@@ -112,19 +111,17 @@ func (h *PublicChatHandler) SendPublicMessage(w http.ResponseWriter, r *http.Req
 //	@Failure		500	{string}	string				"Bad Request: Get public messages error"
 //	@Router			/v1/messages/public [get]
 func (h *PublicChatHandler) ShowPublicMessage(w http.ResponseWriter, r *http.Request) {
-	messages, err := h.service.GetPublicMessages()
-	if err != nil {
-		baseresponse.RenderErr(w, r, http.StatusInternalServerError, err)
-		return
-	}
-
 	params, err := handlersMapper.GetPaginateParameters(r)
 	if err != nil {
 		baseresponse.RenderErr(w, r, http.StatusBadRequest, err)
 		return
 	}
 
-	pageMessages := h.service.PaginateMessages(messages, params)
+	pageMessages, err := h.service.GetPublicMessages(params)
+	if err != nil {
+		baseresponse.RenderErr(w, r, http.StatusInternalServerError, err)
+		return
+	}
 
 	response := mapper.MakeShowPublicMessagesResponse(pageMessages)
 

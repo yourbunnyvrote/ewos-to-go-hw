@@ -16,9 +16,9 @@ import (
 
 type PrivateMessageService interface {
 	SendPrivateMessage(chat entities.ChatMetadata, msg entities.Message) error
-	GetPrivateMessages(chat entities.ChatMetadata) ([]entities.Message, error)
+	GetPrivateMessages(chat entities.ChatMetadata, params entities.PaginateParam) ([]entities.Message, error)
 	GetUsersWithMessage(receiver string) ([]string, error)
-	PaginateMessages(messages []entities.Message, param entities.PaginateParam) []entities.Message
+	//PaginateMessages(messages []entities.Message, param entities.PaginateParam) []entities.Message
 }
 
 type Identity interface {
@@ -139,19 +139,17 @@ func (h *PrivateChatHandler) ShowPrivateMessages(w http.ResponseWriter, r *http.
 
 	chatMetadata := mapper.MakeChatMetadata(receiver, sender.Login)
 
-	messages, err := h.service.GetPrivateMessages(chatMetadata)
-	if err != nil {
-		baseresponse.RenderErr(w, r, http.StatusInternalServerError, err)
-		return
-	}
-
 	params, err := handlersMapper.GetPaginateParameters(r)
 	if err != nil {
 		baseresponse.RenderErr(w, r, http.StatusBadRequest, err)
 		return
 	}
 
-	pageMessages := h.service.PaginateMessages(messages, params)
+	pageMessages, err := h.service.GetPrivateMessages(chatMetadata, params)
+	if err != nil {
+		baseresponse.RenderErr(w, r, http.StatusInternalServerError, err)
+		return
+	}
 
 	responseMessages := mapper.MakeMessagesResponse(pageMessages)
 

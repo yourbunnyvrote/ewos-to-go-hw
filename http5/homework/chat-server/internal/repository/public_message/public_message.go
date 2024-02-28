@@ -44,7 +44,7 @@ func (r *Repository) SendPublicMessage(msg entities.Message) error {
 	return nil
 }
 
-func (r *Repository) GetPublicMessages() ([]entities.Message, error) {
+func (r *Repository) GetPublicChat() ([]entities.Message, error) {
 	publicChat := r.db.Get(DBKey)
 
 	messages, ok := publicChat.(PublicChatsData)
