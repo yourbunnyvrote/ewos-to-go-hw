@@ -100,7 +100,7 @@ paths:
             type: string
       summary: Register a new user
       tags:
-      - auth
+      - user
   /v1/messages/private:
     get:
       consumes:

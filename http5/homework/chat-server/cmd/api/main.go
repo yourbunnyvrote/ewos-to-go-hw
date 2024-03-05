@@ -16,9 +16,9 @@ import (
 	"github.com/ew0s/ewos-to-go-hw/internal/api/handlers/private_message"
 	"github.com/ew0s/ewos-to-go-hw/internal/api/handlers/public_message"
 	"github.com/ew0s/ewos-to-go-hw/internal/database"
-	reposAuth "github.com/ew0s/ewos-to-go-hw/internal/repository/auth"
 	reposPrivateMessage "github.com/ew0s/ewos-to-go-hw/internal/repository/private_message"
 	reposPublicMessage "github.com/ew0s/ewos-to-go-hw/internal/repository/public_message"
+	reposAuth "github.com/ew0s/ewos-to-go-hw/internal/repository/user"
 	serviceAuth "github.com/ew0s/ewos-to-go-hw/internal/service/auth"
 	servicePrivateMessage "github.com/ew0s/ewos-to-go-hw/internal/service/private_message"
 	servicePublicMessage "github.com/ew0s/ewos-to-go-hw/internal/service/public_message"
@@ -53,10 +53,10 @@ func main() {
 	privateMessageService := servicePrivateMessage.NewService(privateMessageRepo)
 	publicMessageService := servicePublicMessage.NewService(publicMessageRepo)
 
-	authHandler := auth.NewAuthHandler(authService, validate)
+	authHandler := auth.NewHandler(authService, validate)
 	userIdentity := middleware.NewUserIdentity(authService)
-	privateChatHandler := private_message.NewPrivateChatHandler(privateMessageService, userIdentity, validate)
-	publicChatHandler := public_message.NewPublicChatHandler(publicMessageService, userIdentity, validate)
+	privateChatHandler := private_message.NewHandler(privateMessageService, userIdentity, validate)
+	publicChatHandler := public_message.NewHandler(publicMessageService, userIdentity, validate)
 
 	routers := map[string]chi.Router{
 		consts.AuthEndpoint:           authHandler.Routes(),

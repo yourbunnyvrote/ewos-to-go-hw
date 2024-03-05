@@ -25,21 +25,21 @@ type Identity interface {
 	Identify(next http.Handler) http.Handler
 }
 
-type PublicChatHandler struct {
+type Handler struct {
 	service      PublicMessageService
 	userIdentity Identity
 	validate     *validator.Validate
 }
 
-func NewPublicChatHandler(service PublicMessageService, userIdentity Identity, validate *validator.Validate) *PublicChatHandler {
-	return &PublicChatHandler{
+func NewHandler(service PublicMessageService, userIdentity Identity, validate *validator.Validate) *Handler {
+	return &Handler{
 		service:      service,
 		userIdentity: userIdentity,
 		validate:     validate,
 	}
 }
 
-func (h *PublicChatHandler) Routes() *chi.Mux {
+func (h *Handler) Routes() *chi.Mux {
 	r := chi.NewRouter()
 
 	r.Use(h.userIdentity.Identify)
@@ -64,7 +64,7 @@ func (h *PublicChatHandler) Routes() *chi.Mux {
 //	@Failure		401	{string}	string				"Unauthorized: Missing or invalid API key"
 //	@Failure		500	{string}	string				"JSON encoding error"
 //	@Router			/v1/messages/public [post]
-func (h *PublicChatHandler) SendPublicMessage(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) SendPublicMessage(w http.ResponseWriter, r *http.Request) {
 	var req request.SendPublicMessageRequest
 
 	if err := httputils.DecodeRequestBody(r, &req); err != nil {
@@ -113,7 +113,7 @@ func (h *PublicChatHandler) SendPublicMessage(w http.ResponseWriter, r *http.Req
 //	@Failure		401	{string}	string				"Unauthorized: Missing or invalid API key"
 //	@Failure		500	{string}	string				"Bad Request: Get public messages error"
 //	@Router			/v1/messages/public [get]
-func (h *PublicChatHandler) ShowPublicMessage(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) ShowPublicMessage(w http.ResponseWriter, r *http.Request) {
 	limit, offset, err := handlersMapper.GetPaginateParameters(r)
 	if err != nil {
 		baseresponse.RenderErr(w, r, http.StatusBadRequest, err)

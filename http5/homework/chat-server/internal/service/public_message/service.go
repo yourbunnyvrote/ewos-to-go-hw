@@ -2,7 +2,7 @@ package public_message
 
 import (
 	"github.com/ew0s/ewos-to-go-hw/internal/domain/entities"
-	"github.com/ew0s/ewos-to-go-hw/internal/service/message"
+	"github.com/ew0s/ewos-to-go-hw/pkg/pagination"
 )
 
 type PublicMessageRepo interface {
@@ -28,7 +28,7 @@ func (cs *Service) GetPublicMessages(params entities.PaginateParam) ([]entities.
 		return nil, err
 	}
 
-	pageMessages := message.PaginateMessages(publicChat, params)
+	pageMessages := pagination.Paginate(publicChat, params.Offset, params.Limit)
 
 	return pageMessages, nil
 }

@@ -15,7 +15,7 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/v1/auth/sign-up": {
+        "/v1/user/sign-up": {
             "post": {
                 "description": "Creates a new user account based on the provided user data",
                 "consumes": [
@@ -25,7 +25,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "auth"
+                    "user"
                 ],
                 "summary": "Register a new user",
                 "parameters": [

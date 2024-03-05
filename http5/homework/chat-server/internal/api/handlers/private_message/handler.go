@@ -25,21 +25,21 @@ type Identity interface {
 	Identify(next http.Handler) http.Handler
 }
 
-type PrivateChatHandler struct {
+type Handler struct {
 	service      PrivateMessageService
 	userIdentity Identity
 	validate     *validator.Validate
 }
 
-func NewPrivateChatHandler(service PrivateMessageService, userIdentity Identity, validate *validator.Validate) *PrivateChatHandler {
-	return &PrivateChatHandler{
+func NewHandler(service PrivateMessageService, userIdentity Identity, validate *validator.Validate) *Handler {
+	return &Handler{
 		service:      service,
 		userIdentity: userIdentity,
 		validate:     validate,
 	}
 }
 
-func (h *PrivateChatHandler) Routes() *chi.Mux {
+func (h *Handler) Routes() *chi.Mux {
 	r := chi.NewRouter()
 
 	r.Use(h.userIdentity.Identify)
@@ -67,7 +67,7 @@ func (h *PrivateChatHandler) Routes() *chi.Mux {
 //	@Failure		500	{string}	string				"Failed to retrieve data from the query context"
 //	@Failure		500	{string}	string				"JSON encoding error"
 //	@Router			/v1/messages/private [post]
-func (h *PrivateChatHandler) SendPrivateMessage(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) SendPrivateMessage(w http.ResponseWriter, r *http.Request) {
 	var req request.SendPrivateMessageRequest
 
 	if err := httputils.DecodeRequestBody(r, &req); err != nil {
@@ -123,7 +123,7 @@ func (h *PrivateChatHandler) SendPrivateMessage(w http.ResponseWriter, r *http.R
 //	@Failure		500	{string}	string				"Failed to retrieve data from the query context"
 //	@Failure		500	{string}	string				"JSON encoding error"
 //	@Router			/v1/messages/private [get]
-func (h *PrivateChatHandler) ShowPrivateMessages(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) ShowPrivateMessages(w http.ResponseWriter, r *http.Request) {
 	receiver := r.URL.Query().Get(UsernameQueryParameter)
 
 	sender, ok := r.Context().Value(RouteContextCredentials).(entities.AuthCredentials)
@@ -177,7 +177,7 @@ func (h *PrivateChatHandler) ShowPrivateMessages(w http.ResponseWriter, r *http.
 //	@Failure		500	{string}	string		"Failed to retrieve data from the query context"
 //	@Failure		500	{string}	string		"JSON encoding error"
 //	@Router			/v1/messages/private/users [get]
-func (h *PrivateChatHandler) ShowUsersWithMessages(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) ShowUsersWithMessages(w http.ResponseWriter, r *http.Request) {
 	user, ok := r.Context().Value(RouteContextCredentials).(entities.AuthCredentials)
 	if !ok {
 		baseresponse.RenderErr(w, r, http.StatusInternalServerError, handlers.ErrRetrievingDataContext)

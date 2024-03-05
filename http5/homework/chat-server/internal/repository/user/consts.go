@@ -1,3 +1,3 @@
-package auth
+package user
 
 const DBKey = "users"

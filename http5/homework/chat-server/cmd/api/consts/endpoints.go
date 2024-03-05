@@ -1,7 +1,7 @@
 package consts
 
 const (
-	AuthEndpoint           = "/auth"
+	AuthEndpoint           = "/user"
 	PublicMessageEndpoint  = "/messages/public"
 	PrivateMessageEndpoint = "/messages/private"
 )

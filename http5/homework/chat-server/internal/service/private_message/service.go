@@ -2,7 +2,7 @@ package private_message
 
 import (
 	"github.com/ew0s/ewos-to-go-hw/internal/domain/entities"
-	"github.com/ew0s/ewos-to-go-hw/internal/service/message"
+	"github.com/ew0s/ewos-to-go-hw/pkg/pagination"
 )
 
 type PrivateMessageRepo interface {
@@ -36,7 +36,7 @@ func (cs *Service) GetPrivateMessages(chat entities.ChatMetadata, params entitie
 		chat.Username1, chat.Username2 = chat.Username2, chat.Username1
 	}
 
-	pageMessages := message.PaginateMessages(privateChatsData[chat], params)
+	pageMessages := pagination.Paginate(privateChatsData[chat], params.Offset, params.Limit)
 
 	return pageMessages, nil
 }
