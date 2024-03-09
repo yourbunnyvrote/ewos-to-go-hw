@@ -20,8 +20,14 @@ func MakeEntityAuthCredentials(login, password string) entities.AuthCredentials 
 	}
 }
 
-func MakeAuthResponse(credentials entities.AuthCredentials) response.RegistrationResponse {
+func MakeRegistrationResponse(credentials entities.AuthCredentials) response.RegistrationResponse {
 	return response.RegistrationResponse{
 		Username: credentials.Login,
+	}
+}
+
+func MakeJWTResponse(token string) response.JWTResponse {
+	return response.JWTResponse{
+		Token: token,
 	}
 }
