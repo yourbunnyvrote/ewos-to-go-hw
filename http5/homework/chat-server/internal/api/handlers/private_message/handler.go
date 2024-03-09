@@ -3,6 +3,8 @@ package private_message
 import (
 	"net/http"
 
+	"github.com/ew0s/ewos-to-go-hw/internal/api/handlers/middleware"
+
 	"github.com/ew0s/ewos-to-go-hw/internal/api/handlers"
 	handlersMapper "github.com/ew0s/ewos-to-go-hw/internal/api/handlers/mapper"
 	"github.com/ew0s/ewos-to-go-hw/internal/api/handlers/private_message/request"
@@ -16,7 +18,7 @@ import (
 )
 
 type PrivateMessageService interface {
-	SendPrivateMessage(chat entities.ChatMetadata, msg entities.Message) error
+	SendPrivateMessage(receiver string, msg entities.Message) error
 	GetPrivateMessages(chat entities.ChatMetadata, params entities.PaginateParam) ([]entities.Message, error)
 	GetUsersWithMessage(receiver string) ([]string, error)
 }
@@ -42,7 +44,7 @@ func NewHandler(service PrivateMessageService, userIdentity Identity, validate *
 func (h *Handler) Routes() *chi.Mux {
 	r := chi.NewRouter()
 
-	r.Use(h.userIdentity.Identify)
+	r.Use(middleware.Logger(), h.userIdentity.Identify)
 	r.Post("/", h.SendPrivateMessage)
 	r.Get("/", h.ShowPrivateMessages)
 	r.Get("/users", h.ShowUsersWithMessages)
@@ -88,10 +90,9 @@ func (h *Handler) SendPrivateMessage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	chat := mapper.MakeChatMetadata(req.Receiver, sender.Login)
 	msg := mapper.MakeEntityMessage(sender.Login, req.Content)
 
-	if err := h.service.SendPrivateMessage(chat, msg); err != nil {
+	if err := h.service.SendPrivateMessage(req.Receiver, msg); err != nil {
 		baseresponse.RenderErr(w, r, http.StatusInternalServerError, err)
 		return
 	}

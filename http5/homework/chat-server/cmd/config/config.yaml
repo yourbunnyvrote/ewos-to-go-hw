@@ -1,0 +1,8 @@
+storage_type: postgres
+auth_type: jwt
+database:
+  host: localhost
+  port: 5432
+  username: postgres
+  password: postgres
+  db: postgres

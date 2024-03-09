@@ -3,6 +3,8 @@ package public_message
 import (
 	"net/http"
 
+	"github.com/ew0s/ewos-to-go-hw/internal/api/handlers/middleware"
+
 	"github.com/ew0s/ewos-to-go-hw/internal/api/handlers"
 	handlersMapper "github.com/ew0s/ewos-to-go-hw/internal/api/handlers/mapper"
 	"github.com/ew0s/ewos-to-go-hw/internal/api/handlers/private_message"
@@ -42,7 +44,7 @@ func NewHandler(service PublicMessageService, userIdentity Identity, validate *v
 func (h *Handler) Routes() *chi.Mux {
 	r := chi.NewRouter()
 
-	r.Use(h.userIdentity.Identify)
+	r.Use(middleware.Logger(), h.userIdentity.Identify)
 	r.Post("/", h.SendPublicMessage)
 	r.Get("/", h.ShowPublicMessage)
 

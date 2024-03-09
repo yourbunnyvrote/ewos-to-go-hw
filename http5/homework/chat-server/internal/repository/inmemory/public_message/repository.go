@@ -3,15 +3,16 @@ package public_message
 import (
 	"sync"
 
+	"github.com/ew0s/ewos-to-go-hw/internal/repository/inmemory"
+
 	"github.com/ew0s/ewos-to-go-hw/internal/domain/entities"
-	"github.com/ew0s/ewos-to-go-hw/internal/repository"
 )
 
 type PublicChatsData []entities.Message
 
 type InMemoryDB interface {
-	Insert(key string, value interface{})
-	Get(key string) interface{}
+	Insert(query string, _ interface{}) error
+	Get(query string) (interface{}, error)
 }
 
 type Repository struct {
@@ -30,26 +31,35 @@ func (r *Repository) SendPublicMessage(msg entities.Message) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
-	publicChat := r.db.Get(DBKey)
+	publicChat, err := r.db.Get(DBKey)
+	if err != nil {
+		return err
+	}
 
 	messages, ok := publicChat.(PublicChatsData)
 	if !ok {
-		return repository.ErrDataError
+		return inmemory.ErrDataError
 	}
 
 	messages = append(messages, msg)
 
-	r.db.Insert(DBKey, messages)
+	err = r.db.Insert(DBKey, messages)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
 
 func (r *Repository) GetPublicChat() ([]entities.Message, error) {
-	publicChat := r.db.Get(DBKey)
+	publicChat, err := r.db.Get(DBKey)
+	if err != nil {
+		return nil, err
+	}
 
 	messages, ok := publicChat.(PublicChatsData)
 	if !ok {
-		return nil, repository.ErrDataError
+		return nil, inmemory.ErrDataError
 	}
 
 	return messages, nil

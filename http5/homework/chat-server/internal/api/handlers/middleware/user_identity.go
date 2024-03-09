@@ -8,14 +8,13 @@ import (
 
 	"github.com/ew0s/ewos-to-go-hw/internal/api/handlers"
 	"github.com/ew0s/ewos-to-go-hw/internal/api/mapper"
-	"github.com/ew0s/ewos-to-go-hw/internal/domain/entities"
 	"github.com/ew0s/ewos-to-go-hw/pkg/httputils/baseresponse"
 
 	"github.com/go-playground/validator/v10"
 )
 
 type IdentityService interface {
-	Identify(user entities.AuthCredentials) error
+	Identify(interface{}) (string, error)
 }
 
 type UserIdentity struct {
@@ -23,9 +22,10 @@ type UserIdentity struct {
 	validate *validator.Validate
 }
 
-func NewUserIdentity(service IdentityService) *UserIdentity {
+func NewUserIdentity(service IdentityService, validate *validator.Validate) *UserIdentity {
 	return &UserIdentity{
-		service: service,
+		service:  service,
+		validate: validate,
 	}
 }
 
@@ -64,7 +64,7 @@ func (h *UserIdentity) Identify(next http.Handler) http.Handler {
 
 		credentials := mapper.MakeEntityAuthCredentials(req.Login, req.Password)
 
-		if err = h.service.Identify(credentials); err != nil {
+		if _, err = h.service.Identify(credentials); err != nil {
 			baseresponse.RenderErr(w, r, http.StatusInternalServerError, err)
 			return
 		}

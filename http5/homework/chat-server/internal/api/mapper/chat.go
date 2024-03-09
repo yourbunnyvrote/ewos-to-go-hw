@@ -5,6 +5,10 @@ import (
 )
 
 func MakeChatMetadata(username1, username2 string) entities.ChatMetadata {
+	if username1 > username2 {
+		username1, username2 = username2, username1
+	}
+
 	return entities.ChatMetadata{
 		Username1: username1,
 		Username2: username2,

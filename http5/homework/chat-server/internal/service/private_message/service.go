@@ -6,8 +6,9 @@ import (
 )
 
 type PrivateMessageRepo interface {
-	SendPrivateMessage(chat entities.ChatMetadata, msg entities.Message) error
-	GetPrivateChats() (map[entities.ChatMetadata][]entities.Message, error)
+	SendPrivateMessage(receiver string, msg entities.Message) error
+	GetPrivateChat(chat entities.ChatMetadata) ([]entities.Message, error)
+	GetUserList(username string) ([]string, error)
 }
 
 type Service struct {
@@ -18,45 +19,21 @@ func NewService(repos PrivateMessageRepo) *Service {
 	return &Service{repos: repos}
 }
 
-func (cs *Service) SendPrivateMessage(chat entities.ChatMetadata, msg entities.Message) error {
-	if chat.Username1 < chat.Username2 {
-		chat.Username1, chat.Username2 = chat.Username2, chat.Username1
-	}
-
-	return cs.repos.SendPrivateMessage(chat, msg)
+func (cs *Service) SendPrivateMessage(receiver string, msg entities.Message) error {
+	return cs.repos.SendPrivateMessage(receiver, msg)
 }
 
 func (cs *Service) GetPrivateMessages(chat entities.ChatMetadata, params entities.PaginateParam) ([]entities.Message, error) {
-	privateChatsData, err := cs.repos.GetPrivateChats()
+	messages, err := cs.repos.GetPrivateChat(chat)
 	if err != nil {
 		return nil, err
 	}
 
-	if chat.Username1 < chat.Username2 {
-		chat.Username1, chat.Username2 = chat.Username2, chat.Username1
-	}
-
-	pageMessages := pagination.Paginate(privateChatsData[chat], params.Offset, params.Limit)
+	pageMessages := pagination.Paginate(messages, params.Offset, params.Limit)
 
 	return pageMessages, nil
 }
 
 func (cs *Service) GetUsersWithMessage(receiver string) ([]string, error) {
-	privateChatsData, err := cs.repos.GetPrivateChats()
-	if err != nil {
-		return nil, err
-	}
-
-	listUsers := make([]string, 0)
-
-	for key := range privateChatsData {
-		switch receiver {
-		case key.Username1:
-			listUsers = append(listUsers, key.Username2)
-		case key.Username2:
-			listUsers = append(listUsers, key.Username1)
-		}
-	}
-
-	return listUsers, nil
+	return cs.repos.GetUserList(receiver)
 }

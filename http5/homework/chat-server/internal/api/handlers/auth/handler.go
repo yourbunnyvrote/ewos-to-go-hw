@@ -3,8 +3,9 @@ package auth
 import (
 	"net/http"
 
+	"github.com/ew0s/ewos-to-go-hw/internal/api/handlers/middleware"
+
 	"github.com/ew0s/ewos-to-go-hw/internal/api/handlers/auth/request"
-	"github.com/ew0s/ewos-to-go-hw/internal/api/mapper"
 	"github.com/ew0s/ewos-to-go-hw/internal/domain/entities"
 	"github.com/ew0s/ewos-to-go-hw/pkg/httputils"
 	"github.com/ew0s/ewos-to-go-hw/pkg/httputils/baseresponse"
@@ -14,7 +15,7 @@ import (
 )
 
 type AuthService interface {
-	CreateUser(user entities.AuthCredentials) error
+	CreateUser(registrationRequest request.RegistrationRequest) (interface{}, error)
 	GetUser(username string) (entities.AuthCredentials, error)
 }
 
@@ -33,6 +34,7 @@ func NewHandler(service AuthService, validate *validator.Validate) *Handler {
 func (h *Handler) Routes() *chi.Mux {
 	r := chi.NewRouter()
 
+	r.Use(middleware.Logger(), middleware.Recovery)
 	r.Post("/sign-up", h.Registration)
 
 	return r
@@ -64,16 +66,13 @@ func (h *Handler) Registration(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	credentials := mapper.MakeEntityAuthCredentials(req.Username, req.Password)
-
-	if err := h.service.CreateUser(credentials); err != nil {
+	resp, err := h.service.CreateUser(req)
+	if err != nil {
 		baseresponse.RenderErr(w, r, http.StatusInternalServerError, err)
 		return
 	}
 
-	response := mapper.MakeAuthResponse(credentials)
-
-	if err := baseresponse.SendResponse(w, http.StatusCreated, response); err != nil {
+	if err := baseresponse.SendResponse(w, http.StatusCreated, resp); err != nil {
 		baseresponse.RenderErr(w, r, http.StatusInternalServerError, err)
 		return
 	}

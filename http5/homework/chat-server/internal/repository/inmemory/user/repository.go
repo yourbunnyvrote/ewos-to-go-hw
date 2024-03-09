@@ -3,14 +3,15 @@ package user
 import (
 	"sync"
 
+	"github.com/ew0s/ewos-to-go-hw/internal/repository/inmemory"
+
 	"github.com/ew0s/ewos-to-go-hw/internal/domain/entities"
-	"github.com/ew0s/ewos-to-go-hw/internal/repository"
 )
 
 type UsersData map[string]entities.AuthCredentials
 
 type InMemoryDB interface {
-	Get(key string) interface{}
+	Get(query string) (data interface{}, _ error)
 }
 
 type Repository struct {
@@ -29,11 +30,14 @@ func (a *Repository) CreateUser(credentials entities.AuthCredentials) error {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 
-	usersData := a.db.Get(DBKey)
+	usersData, err := a.db.Get(DBKey)
+	if err != nil {
+		return err
+	}
 
 	users, ok := usersData.(UsersData)
 	if !ok {
-		return repository.ErrDataError
+		return inmemory.ErrDataError
 	}
 
 	if _, exists := users[credentials.Login]; exists {
@@ -49,11 +53,14 @@ func (a *Repository) GetUser(username string) (entities.AuthCredentials, error) 
 	a.mu.RLock()
 	defer a.mu.RUnlock()
 
-	usersData := a.db.Get(DBKey)
+	usersData, err := a.db.Get(DBKey)
+	if err != nil {
+		return entities.AuthCredentials{}, err
+	}
 
 	users, ok := usersData.(UsersData)
 	if !ok {
-		return entities.AuthCredentials{}, repository.ErrDataError
+		return entities.AuthCredentials{}, inmemory.ErrDataError
 	}
 
 	findUser, exist := users[username]
